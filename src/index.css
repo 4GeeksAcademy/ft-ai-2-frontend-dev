@@ -1,0 +1,65 @@
+@import 'tailwindcss';
+
+body {
+  @apply m-0 min-h-screen bg-gray-50 text-gray-900 font-sans;
+}
+
+.page {
+  @apply flex min-h-screen flex-col items-center justify-center px-4 py-8;
+}
+
+.page__title {
+  @apply mb-8 text-4xl font-bold text-gray-800;
+}
+
+.login-form {
+  @apply w-full max-w-md rounded-lg bg-white p-6 shadow-md;
+}
+
+.login-form__title {
+  @apply mb-6 text-2xl font-semibold text-gray-800;
+}
+
+.login-form__error {
+  @apply mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-600;
+}
+
+.login-form__field {
+  @apply mb-4;
+}
+
+.login-form__label {
+  @apply mb-1 block text-sm font-medium text-gray-700;
+}
+
+.login-form__input {
+  @apply w-full rounded border border-gray-300 px-3 py-2 text-gray-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500;
+}
+
+.login-form__submit {
+  @apply w-full rounded bg-blue-600 px-4 py-2 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.secret {
+  @apply w-full max-w-md rounded-lg bg-white p-6 shadow-md;
+}
+
+.secret__greeting {
+  @apply mb-4 text-xl font-semibold text-gray-800;
+}
+
+.secret__details {
+  @apply mb-6 space-y-2;
+}
+
+.secret__term {
+  @apply text-sm font-medium text-gray-500;
+}
+
+.secret__value {
+  @apply text-gray-900;
+}
+
+.secret__logout {
+  @apply rounded bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-300;
+}
