@@ -6,6 +6,7 @@ React is very unopinionated about structure, but aiming for a structure like thi
 
 - `/`: Contains config files, application entry point (the file that runs to bootstrap the rest of the application)
     - `node_modules/`: This contains all the JS packages that are listed in your `package-lock.json`
+    - `public/`: This contains static assets, things that aren't code.
     - `src/`: This contains the code that is your application!
         - *We stop with convention and move towards suggestion here!*
         - `assets/`: This is anything that is not code that you `import` into a file (for the most part)
@@ -14,7 +15,6 @@ React is very unopinionated about structure, but aiming for a structure like thi
                 - `Name.tsx`: This is the core component.
                 - `Name.css`: This is the CSS for the component.
                 - `NaveVariant.tsx`: This could be a potential variant (e.g. a horizontal card layout.)
-    - `public/`: This contains static assets, things that aren't code.
 
 
 ## NextJS
