@@ -1,8 +1,7 @@
 # ft-ai-2-frontend-dev
 
-## Repo Structure
+## Repo Table Of Contents
 
-Each section will have its' own branch:
 - Providing Visual Specs To The AI: [module/specs-pt-1](https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev/tree/module/specs-pt-1)
 - Single Page Apps: [module/spa](https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev/tree/module/spa)
 - Structure: [module/structure](https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev/tree/module/structure)
@@ -12,7 +11,8 @@ Each section will have its' own branch:
 
 A running log of what we have built, in the order we built it. Each entry maps
 to one commit so students can follow along step by step. See [SPEC.md](./SPEC.md)
-for the full project specification.
+for the full project specification, and [WALKTHROUGH.md](./WALKTHROUGH.md) for a
+guided tour of how the app is put together.
 
 1. **Bootstrap the project.** Scaffolded a Next.js app (App Router) with
    TypeScript, Tailwind CSS, and ESLint. Added the shared `types.d.ts`
