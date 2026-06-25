@@ -18,6 +18,7 @@ export {
   getLoansForBook,
   getActiveLoanForBook,
   createLoan,
+  returnLoan,
   isLoanOverdue,
   formatLoanDate,
   type ActiveLoan,

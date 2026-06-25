@@ -189,3 +189,22 @@ export async function createLoan(loan: NewLoan): Promise<number> {
 
   return Number(result.lastInsertRowid);
 }
+
+/**
+ * Mark a loan as returned by stamping it with the current date.
+ *
+ * Only updates loans that are still out, so returning the same loan twice is a
+ * no-op. Returns `true` when a loan was actually updated.
+ */
+export async function returnLoan(loanId: number): Promise<boolean> {
+  await ensureDbInitialized();
+
+  const result = await getDb().execute({
+    sql: `UPDATE loans
+          SET returned_date = ?
+          WHERE id = ? AND returned_date IS NULL`,
+    args: [new Date().toISOString(), loanId],
+  });
+
+  return result.rowsAffected > 0;
+}

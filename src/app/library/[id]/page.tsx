@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import LoanForm from "@/components/loan_form/LoanForm";
 import LoanHistory from "@/components/loan_history/LoanHistory";
+import ReturnButton from "@/components/return_button/ReturnButton";
 import {
   formatLoanDate,
   getActiveLoanForBook,
@@ -10,7 +11,7 @@ import {
   getBookById,
   getLoansForBook,
 } from "@/db";
-import { createLoanAction } from "./actions";
+import { createLoanAction, returnLoanAction } from "./actions";
 
 interface BookPageProps {
   params: Promise<{ id: string }>;
@@ -53,16 +54,23 @@ export default async function BookPage({ params }: BookPageProps) {
           <p className="text-zinc-600 dark:text-zinc-400">{book.description}</p>
 
           {activeLoan ? (
-            <p className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
-              Currently on loan to{" "}
-              <Link
-                href={`/friends/${activeLoan.borrower.id}`}
-                className="font-medium underline"
-              >
-                {activeLoan.borrower.name}
-              </Link>{" "}
-              since {formatLoanDate(activeLoan.borrow_date)}.
-            </p>
+            <div className="flex flex-col gap-3">
+              <p className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
+                Currently on loan to{" "}
+                <Link
+                  href={`/friends/${activeLoan.borrower.id}`}
+                  className="font-medium underline"
+                >
+                  {activeLoan.borrower.name}
+                </Link>{" "}
+                since {formatLoanDate(activeLoan.borrow_date)}.
+              </p>
+              <ReturnButton
+                bookId={book.id}
+                loanId={activeLoan.id}
+                action={returnLoanAction}
+              />
+            </div>
           ) : (
             <section className="flex flex-col gap-3">
               <h2 className="text-lg font-semibold">Loan this book</h2>

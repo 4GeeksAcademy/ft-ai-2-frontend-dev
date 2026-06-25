@@ -32,6 +32,9 @@ for the full project specification.
 5. **Loan a book from its detail page.** Added a friend picker on
    `/library/[id]` that records a new loan, shows who currently has the book,
    and lists the full borrowing history with active/overdue/returned status.
+6. **Mark a book as returned.** Added a "Mark as returned" button on the book
+   detail page that stamps the active loan with a return date, frees the book
+   to be loaned again, and updates the dashboard.
 
 ## Getting Started
 
