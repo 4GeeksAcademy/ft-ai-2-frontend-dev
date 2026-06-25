@@ -103,3 +103,89 @@ export function formatLoanDate(date: Date): string {
     day: "numeric",
   });
 }
+
+const LOAN_WITH_DETAILS_SQL = `
+  SELECT
+    loans.id,
+    loans.book_id,
+    loans.friend_id,
+    loans.borrow_date,
+    loans.returned_date,
+    friends.name AS friend_name,
+    friends.phone_number AS friend_phone_number,
+    friends.email AS friend_email,
+    books.title AS book_title
+  FROM loans
+  INNER JOIN friends ON friends.id = loans.friend_id
+  INNER JOIN books ON books.id = loans.book_id
+`;
+
+function mapBookLoan(row: LoanWithDetailsRow): Loan {
+  const borrower = mapFriendRow({
+    id: row.friend_id,
+    name: row.friend_name,
+    phone_number: row.friend_phone_number,
+    email: row.friend_email,
+  });
+
+  return mapLoanRow(row, borrower);
+}
+
+/** Every loan record for a single book, newest first. */
+export async function getLoansForBook(bookId: number): Promise<Loan[]> {
+  await ensureDbInitialized();
+
+  const result = await getDb().execute({
+    sql: `${LOAN_WITH_DETAILS_SQL}
+      WHERE loans.book_id = ?
+      ORDER BY loans.borrow_date DESC`,
+    args: [bookId],
+  });
+
+  return result.rows.map((row) => mapBookLoan(rowToLoanWithDetails(row)));
+}
+
+/** The active loan for a book, if it is currently out. */
+export async function getActiveLoanForBook(bookId: number): Promise<Loan | null> {
+  await ensureDbInitialized();
+
+  const result = await getDb().execute({
+    sql: `${LOAN_WITH_DETAILS_SQL}
+      WHERE loans.book_id = ? AND loans.returned_date IS NULL
+      LIMIT 1`,
+    args: [bookId],
+  });
+
+  const row = result.rows[0];
+  if (!row) {
+    return null;
+  }
+
+  return mapBookLoan(rowToLoanWithDetails(row));
+}
+
+/** The fields needed to loan a book to a friend. */
+export interface NewLoan {
+  book_id: number;
+  friend_id: number;
+}
+
+/**
+ * Loan a book to a friend. Throws when the book is already on loan.
+ */
+export async function createLoan(loan: NewLoan): Promise<number> {
+  await ensureDbInitialized();
+
+  const activeLoan = await getActiveLoanForBook(loan.book_id);
+  if (activeLoan) {
+    throw new Error("This book is already on loan.");
+  }
+
+  const result = await getDb().execute({
+    sql: `INSERT INTO loans (book_id, friend_id, borrow_date, returned_date)
+          VALUES (?, ?, ?, NULL)`,
+    args: [loan.book_id, loan.friend_id, new Date().toISOString()],
+  });
+
+  return Number(result.lastInsertRowid);
+}

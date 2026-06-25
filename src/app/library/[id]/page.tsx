@@ -1,7 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getBookById } from "@/db";
+import LoanForm from "@/components/loan_form/LoanForm";
+import LoanHistory from "@/components/loan_history/LoanHistory";
+import {
+  formatLoanDate,
+  getActiveLoanForBook,
+  getAllFriends,
+  getBookById,
+  getLoansForBook,
+} from "@/db";
+import { createLoanAction } from "./actions";
 
 interface BookPageProps {
   params: Promise<{ id: string }>;
@@ -9,7 +18,13 @@ interface BookPageProps {
 
 export default async function BookPage({ params }: BookPageProps) {
   const { id } = await params;
-  const book = await getBookById(Number(id));
+  const bookId = Number(id);
+  const [book, friends, loanHistory, activeLoan] = await Promise.all([
+    getBookById(bookId),
+    getAllFriends(),
+    getLoansForBook(bookId),
+    getActiveLoanForBook(bookId),
+  ]);
 
   if (!book) {
     notFound();
@@ -33,14 +48,35 @@ export default async function BookPage({ params }: BookPageProps) {
           className="h-72 w-48 rounded-lg object-cover"
         />
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-1 flex-col gap-4">
           <h1 className="text-3xl font-semibold tracking-tight">{book.title}</h1>
           <p className="text-zinc-600 dark:text-zinc-400">{book.description}</p>
-          <p className="text-sm text-zinc-500">
-            Loan history and the loan-to-friend form will be added on this page.
-          </p>
+
+          {activeLoan ? (
+            <p className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
+              Currently on loan to{" "}
+              <Link
+                href={`/friends/${activeLoan.borrower.id}`}
+                className="font-medium underline"
+              >
+                {activeLoan.borrower.name}
+              </Link>{" "}
+              since {formatLoanDate(activeLoan.borrow_date)}.
+            </p>
+          ) : (
+            <section className="flex flex-col gap-3">
+              <h2 className="text-lg font-semibold">Loan this book</h2>
+              <LoanForm
+                bookId={book.id}
+                friends={friends}
+                action={createLoanAction}
+              />
+            </section>
+          )}
         </div>
       </div>
+
+      <LoanHistory loans={loanHistory} />
     </div>
   );
 }

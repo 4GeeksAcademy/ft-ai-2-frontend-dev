@@ -21,7 +21,8 @@
 }
 
 .form__input,
-.form__textarea {
+.form__textarea,
+.form__select {
   width: 100%;
   padding: 0.5rem 0.75rem;
   border: 1px solid color-mix(in srgb, var(--foreground) 18%, transparent);
@@ -38,7 +39,8 @@
 }
 
 .form__input:focus,
-.form__textarea:focus {
+.form__textarea:focus,
+.form__select:focus {
   outline: none;
   border-color: color-mix(in srgb, var(--foreground) 45%, transparent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--foreground) 12%, transparent);

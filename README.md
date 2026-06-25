@@ -26,6 +26,12 @@ for the full project specification.
    scaffolded every route from the spec: the dashboard (`/`), library
    (`/library`, `/library/[id]`, `/library/create_book`), and friends
    (`/friends`, `/friends/[id]`, `/friends/create_friend`).
+4. **Add create forms.** Built working create-book and create-friend forms
+   backed by server actions, with reusable form field components and light
+   validation (phone number normalization, placeholder cover images).
+5. **Loan a book from its detail page.** Added a friend picker on
+   `/library/[id]` that records a new loan, shows who currently has the book,
+   and lists the full borrowing history with active/overdue/returned status.
 
 ## Getting Started
 
