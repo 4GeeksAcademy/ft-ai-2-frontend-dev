@@ -1,4 +1,5 @@
 import Link from "next/link";
+import FriendsList from "@/components/friends_list/FriendsList";
 import { getAllFriends } from "@/db";
 
 export default async function FriendsPage() {
@@ -10,7 +11,7 @@ export default async function FriendsPage() {
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-semibold tracking-tight">Friends</h1>
           <p className="text-zinc-600 dark:text-zinc-400">
-            People you loan books to. Sorting and filtering will be added next.
+            Browse, search, and sort the people you loan books to.
           </p>
         </div>
 
@@ -27,21 +28,7 @@ export default async function FriendsPage() {
           No friends yet. Add someone you might loan a book to.
         </p>
       ) : (
-        <ul className="divide-y divide-zinc-200 rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
-          {friends.map((friend) => (
-            <li key={friend.id}>
-              <Link
-                href={`/friends/${friend.id}`}
-                className="flex flex-col gap-1 px-4 py-4 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-950"
-              >
-                <span className="font-medium">{friend.name}</span>
-                <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                  {friend.email}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <FriendsList friends={friends} />
       )}
     </div>
   );

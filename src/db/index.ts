@@ -16,11 +16,13 @@ export {
   getActiveLoans,
   getOverdueLoans,
   getLoansForBook,
+  getLoansForFriend,
   getActiveLoanForBook,
   createLoan,
   returnLoan,
   isLoanOverdue,
   formatLoanDate,
   type ActiveLoan,
+  type FriendLoan,
   type NewLoan,
 } from "@/db/loans";

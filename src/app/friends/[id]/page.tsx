@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getFriendById } from "@/db";
+import FriendLoanHistory from "@/components/friend_loan_history/FriendLoanHistory";
+import { getFriendById, getLoansForFriend } from "@/db";
 
 interface FriendPageProps {
   params: Promise<{ id: string }>;
@@ -8,11 +9,17 @@ interface FriendPageProps {
 
 export default async function FriendPage({ params }: FriendPageProps) {
   const { id } = await params;
-  const friend = await getFriendById(Number(id));
+  const friendId = Number(id);
+  const [friend, loans] = await Promise.all([
+    getFriendById(friendId),
+    getLoansForFriend(friendId),
+  ]);
 
   if (!friend) {
     notFound();
   }
+
+  const currentlyBorrowed = loans.filter((loan) => !loan.returned_date);
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 p-6 md:p-8">
@@ -26,7 +33,11 @@ export default async function FriendPage({ params }: FriendPageProps) {
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold tracking-tight">{friend.name}</h1>
         <p className="text-zinc-600 dark:text-zinc-400">
-          Contact details and borrowing history will be expanded on this page.
+          {currentlyBorrowed.length === 0
+            ? "No books currently borrowed."
+            : `Currently has ${currentlyBorrowed.length} book${
+                currentlyBorrowed.length === 1 ? "" : "s"
+              } on loan.`}
         </p>
       </header>
 
@@ -48,6 +59,8 @@ export default async function FriendPage({ params }: FriendPageProps) {
           </dd>
         </div>
       </dl>
+
+      <FriendLoanHistory loans={loans} />
     </div>
   );
 }

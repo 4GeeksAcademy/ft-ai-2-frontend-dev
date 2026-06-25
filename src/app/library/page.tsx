@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import LibraryList from "@/components/library_list/LibraryList";
 import { getAllBooks } from "@/db";
 
 export default async function LibraryPage() {
@@ -11,7 +11,7 @@ export default async function LibraryPage() {
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-semibold tracking-tight">Library</h1>
           <p className="text-zinc-600 dark:text-zinc-400">
-            Browse the books you own. Sorting and filtering will be added next.
+            Browse, search, and sort the books you own.
           </p>
         </div>
 
@@ -28,30 +28,7 @@ export default async function LibraryPage() {
           Your library is empty. Add your first book to get started.
         </p>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2">
-          {books.map((book) => (
-            <li key={book.id}>
-              <Link
-                href={`/library/${book.id}`}
-                className="flex gap-4 rounded-xl border border-zinc-200 p-4 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-950"
-              >
-                <Image
-                  src={book.cover_img}
-                  alt={`Cover of ${book.title}`}
-                  width={80}
-                  height={112}
-                  className="h-28 w-20 rounded object-cover"
-                />
-                <div className="flex flex-col gap-1">
-                  <h2 className="font-medium">{book.title}</h2>
-                  <p className="line-clamp-3 text-sm text-zinc-600 dark:text-zinc-400">
-                    {book.description}
-                  </p>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <LibraryList books={books} />
       )}
     </div>
   );

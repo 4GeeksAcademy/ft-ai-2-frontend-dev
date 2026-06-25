@@ -145,6 +145,34 @@ export async function getLoansForBook(bookId: number): Promise<Loan[]> {
   return result.rows.map((row) => mapBookLoan(rowToLoanWithDetails(row)));
 }
 
+/** A loan with the related book attached, used on the friend detail page. */
+export interface FriendLoan extends Loan {
+  book_id: number;
+  book_title: string;
+}
+
+function mapFriendLoan(row: LoanWithDetailsRow): FriendLoan {
+  return {
+    ...mapBookLoan(row),
+    book_id: row.book_id,
+    book_title: row.book_title,
+  };
+}
+
+/** Every loan a friend has taken out, newest first, with book details. */
+export async function getLoansForFriend(friendId: number): Promise<FriendLoan[]> {
+  await ensureDbInitialized();
+
+  const result = await getDb().execute({
+    sql: `${LOAN_WITH_DETAILS_SQL}
+      WHERE loans.friend_id = ?
+      ORDER BY loans.borrow_date DESC`,
+    args: [friendId],
+  });
+
+  return result.rows.map((row) => mapFriendLoan(rowToLoanWithDetails(row)));
+}
+
 /** The active loan for a book, if it is currently out. */
 export async function getActiveLoanForBook(bookId: number): Promise<Loan | null> {
   await ensureDbInitialized();

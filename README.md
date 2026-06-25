@@ -35,6 +35,12 @@ for the full project specification.
 6. **Mark a book as returned.** Added a "Mark as returned" button on the book
    detail page that stamps the active loan with a return date, frees the book
    to be loaned again, and updates the dashboard.
+7. **Flesh out friend detail pages.** Friend pages now show how many books a
+   friend currently has out plus their full borrowing history (with links to
+   each book and active/overdue/returned status).
+8. **Searchable, sortable lists.** The library and friends index pages can now
+   be filtered by a search box and sorted A–Z or Z–A, handled on the client
+   for instant feedback.
 
 ## Getting Started
 
