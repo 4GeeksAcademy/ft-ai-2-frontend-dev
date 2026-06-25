@@ -1,5 +1,11 @@
 # Book App
 
+## Development Conventions:
+
+- This project is intended as a live example for adult students.
+- Code should be clear and well-documented.
+- The project should be done in sensible steps, and committed to the git repo for each step.
+
 ## Overview
 
 Book App is a tool to let me track what books I own, what books I am loaning to friends, when I loaned the books to whom.
@@ -12,15 +18,19 @@ Book App is a tool to let me track what books I own, what books I am loaning to 
 
 ## NextJS Directory Structure
 
-Beside the default app router setup, I'd like to keep components in their own directory structured like this:
+Beside the default app router setup, I'd like to keep components and shared types in a `src/` directory, structured like this:
 
 - `./`: Project root
-    - `components/`: A folder that contains all your components, and the CSS for them.
-        - `component_name/`: The root of the component structure
-            - `ComponentName.tsx`: This is the core component.
-            - `ComponentName.css`: This is the CSS for the component.
-            - `ComponentNaveVariant.tsx`: Variants of the components should be separate files (e.g. a horizontal card layout could be CardHorizontal.tsx)
-    - `types.d.ts`: The types for the project
+    - `app/`: The Next.js app router pages and layouts.
+    - `src/`: Application source that isn't part of the app router.
+        - `components/`: A folder that contains all your components, and the CSS for them.
+            - `component_name/`: The root of the component structure
+                - `ComponentName.tsx`: This is the core component.
+                - `ComponentName.css`: This is the CSS for the component.
+                - `ComponentNaveVariant.tsx`: Variants of the components should be separate files (e.g. a horizontal card layout could be CardHorizontal.tsx)
+        - `types.d.ts`: The types for the project
+
+The `@/*` import alias maps to `src/*`, so a component can be imported as `@/components/card/Card`.
 
 ## Data types
 
