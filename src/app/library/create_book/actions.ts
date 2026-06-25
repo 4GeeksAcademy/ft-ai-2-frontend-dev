@@ -5,9 +5,14 @@ import { revalidatePath } from "next/cache";
 import { createBook } from "@/db";
 import type { FormState } from "@/components/form/FormField";
 
-/** Fallback cover image when the user does not provide one. */
+/**
+ * Fallback cover image when the user does not provide one.
+ *
+ * The `.png` extension is required: without it placehold.co serves an SVG,
+ * which next/image blocks unless `dangerouslyAllowSVG` is enabled.
+ */
 function placeholderCover(title: string): string {
-  return `https://placehold.co/200x300/1e293b/f8fafc?text=${encodeURIComponent(title)}`;
+  return `https://placehold.co/200x300/1e293b/f8fafc.png?text=${encodeURIComponent(title)}`;
 }
 
 /**

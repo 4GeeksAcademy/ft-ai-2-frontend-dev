@@ -44,7 +44,7 @@ async function seedDatabaseIfEmpty(db: ReturnType<typeof getDb>): Promise<void> 
         args: [
           "The Pragmatic Programmer",
           "A classic guide to becoming a better software developer.",
-          "https://placehold.co/200x300/1e293b/f8fafc?text=Pragmatic",
+          "https://placehold.co/200x300/1e293b/f8fafc.png?text=Pragmatic",
         ],
       },
       {
@@ -52,7 +52,7 @@ async function seedDatabaseIfEmpty(db: ReturnType<typeof getDb>): Promise<void> 
         args: [
           "Clean Code",
           "Principles and patterns for writing readable, maintainable code.",
-          "https://placehold.co/200x300/334155/f8fafc?text=Clean+Code",
+          "https://placehold.co/200x300/334155/f8fafc.png?text=Clean+Code",
         ],
       },
       {
@@ -60,7 +60,7 @@ async function seedDatabaseIfEmpty(db: ReturnType<typeof getDb>): Promise<void> 
         args: [
           "Designing Data-Intensive Applications",
           "A deep dive into the architecture of modern data systems.",
-          "https://placehold.co/200x300/475569/f8fafc?text=DDIA",
+          "https://placehold.co/200x300/475569/f8fafc.png?text=DDIA",
         ],
       },
     ],
