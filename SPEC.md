@@ -28,6 +28,7 @@ I'd like to keep all application source inside a `src/` directory, including the
                 - `ComponentName.tsx`: This is the core component.
                 - `ComponentName.css`: This is the CSS for the component.
                 - `ComponentNaveVariant.tsx`: Variants of the components should be separate files (e.g. a horizontal card layout could be CardHorizontal.tsx)
+        - `db/`: Database client, schema setup, and query helpers for libSQL.
         - `types.d.ts`: The types for the project
 
 The `@/*` import alias maps to `src/*`, so a component can be imported as `@/components/card/Card`.
