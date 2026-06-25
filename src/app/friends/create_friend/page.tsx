@@ -1,4 +1,6 @@
 import Link from "next/link";
+import FriendForm from "@/components/friend_form/FriendForm";
+import { createFriendAction } from "./actions";
 
 export default function CreateFriendPage() {
   return (
@@ -13,9 +15,11 @@ export default function CreateFriendPage() {
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold tracking-tight">Add a friend</h1>
         <p className="text-zinc-600 dark:text-zinc-400">
-          The create-friend form will save new contacts to the libSQL database.
+          Save a new contact you might loan books to.
         </p>
       </header>
+
+      <FriendForm action={createFriendAction} />
     </div>
   );
 }

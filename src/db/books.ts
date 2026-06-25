@@ -39,3 +39,22 @@ export async function getBookById(id: number): Promise<Book | null> {
 
   return mapBookRow(rowToBook(row));
 }
+
+/** The fields needed to add a new book. */
+export interface NewBook {
+  title: string;
+  description: string;
+  cover_img: string;
+}
+
+/** Insert a new book and return its generated id. */
+export async function createBook(book: NewBook): Promise<number> {
+  await ensureDbInitialized();
+
+  const result = await getDb().execute({
+    sql: "INSERT INTO books (title, description, cover_img) VALUES (?, ?, ?)",
+    args: [book.title, book.description, book.cover_img],
+  });
+
+  return Number(result.lastInsertRowid);
+}

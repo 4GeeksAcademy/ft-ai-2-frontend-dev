@@ -39,3 +39,22 @@ export async function getFriendById(id: number): Promise<Friend | null> {
 
   return mapFriendRow(rowToFriend(row));
 }
+
+/** The fields needed to add a new friend. */
+export interface NewFriend {
+  name: string;
+  phone_number: string;
+  email: string;
+}
+
+/** Insert a new friend and return their generated id. */
+export async function createFriend(friend: NewFriend): Promise<number> {
+  await ensureDbInitialized();
+
+  const result = await getDb().execute({
+    sql: "INSERT INTO friends (name, phone_number, email) VALUES (?, ?, ?)",
+    args: [friend.name, friend.phone_number, friend.email],
+  });
+
+  return Number(result.lastInsertRowid);
+}

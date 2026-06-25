@@ -1,7 +1,17 @@
 export { getDb } from "@/db/client";
 export { ensureDbInitialized } from "@/db/init";
-export { getAllFriends, getFriendById } from "@/db/friends";
-export { getAllBooks, getBookById } from "@/db/books";
+export {
+  getAllFriends,
+  getFriendById,
+  createFriend,
+  type NewFriend,
+} from "@/db/friends";
+export {
+  getAllBooks,
+  getBookById,
+  createBook,
+  type NewBook,
+} from "@/db/books";
 export {
   getActiveLoans,
   getOverdueLoans,

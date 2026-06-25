@@ -1,4 +1,6 @@
 import Link from "next/link";
+import BookForm from "@/components/book_form/BookForm";
+import { createBookAction } from "./actions";
 
 export default function CreateBookPage() {
   return (
@@ -13,9 +15,11 @@ export default function CreateBookPage() {
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold tracking-tight">Add a book</h1>
         <p className="text-zinc-600 dark:text-zinc-400">
-          The create-book form will save new titles to the libSQL database.
+          Save a new title to your library.
         </p>
       </header>
+
+      <BookForm action={createBookAction} />
     </div>
   );
 }
