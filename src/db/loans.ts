@@ -35,6 +35,7 @@ function rowToLoanWithDetails(row: Record<string, unknown>): LoanWithDetailsRow 
 }
 
 export interface ActiveLoan extends Loan {
+  book_id: number;
   book_title: string;
 }
 
@@ -48,6 +49,7 @@ function mapActiveLoan(row: LoanWithDetailsRow): ActiveLoan {
 
   return {
     ...mapLoanRow(row, borrower),
+    book_id: row.book_id,
     book_title: row.book_title,
   };
 }

@@ -40,7 +40,18 @@
 }
 
 .loan-panel__book {
+  display: inline-block;
+  width: fit-content;
   font-weight: 500;
+}
+
+.loan-panel__link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.loan-panel__link:hover {
+  text-decoration: underline;
 }
 
 .loan-panel__meta {
