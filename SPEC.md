@@ -18,11 +18,11 @@ Book App is a tool to let me track what books I own, what books I am loaning to 
 
 ## NextJS Directory Structure
 
-Beside the default app router setup, I'd like to keep components and shared types in a `src/` directory, structured like this:
+I'd like to keep all application source inside a `src/` directory, including the app router, structured like this:
 
 - `./`: Project root
-    - `app/`: The Next.js app router pages and layouts.
-    - `src/`: Application source that isn't part of the app router.
+    - `src/`: Application source.
+        - `app/`: The Next.js app router pages and layouts.
         - `components/`: A folder that contains all your components, and the CSS for them.
             - `component_name/`: The root of the component structure
                 - `ComponentName.tsx`: This is the core component.
