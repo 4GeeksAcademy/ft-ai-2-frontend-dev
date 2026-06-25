@@ -41,6 +41,11 @@ for the full project specification.
 8. **Searchable, sortable lists.** The library and friends index pages can now
    be filtered by a search box and sorted A–Z or Z–A, handled on the client
    for instant feedback.
+9. **Link the dashboard.** The dashboard loan panels now link each book title
+   to its detail page and each borrower name to their friend page.
+10. **Fix placeholder covers.** Added a `.png` extension to the `placehold.co`
+    cover URLs (seed data and the generated fallback). Without it the service
+    returns SVG, which `next/image` blocks unless `dangerouslyAllowSVG` is on.
 
 ## Getting Started
 
