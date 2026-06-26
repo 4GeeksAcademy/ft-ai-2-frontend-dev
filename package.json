@@ -7,7 +7,7 @@
 
   },
   "scripts": {
-    "build": "marked -i README.md -o site/index.html"
+    "build": "marked -i README.md -o docs/index.html"
   },
   "repository": {
     "type": "git",
