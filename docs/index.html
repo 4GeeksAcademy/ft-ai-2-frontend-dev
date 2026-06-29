@@ -1,13 +1,73 @@
-<h1>ft-ai-2-frontend-dev</h1>
-<!-- TOC:START -->
-<h2>Module Demonstrations</h2>
-<p>Each demonstration lives on its own branch:</p>
-<ul>
-<li>Providing Visual Specs To The AI: <a href="https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev/tree/module/specs-pt-1">module/specs-pt-1</a></li>
-<li>Single Page Apps: <a href="https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev/tree/module/spa">module/spa</a></li>
-<li>Structure: <a href="https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev/tree/module/structure">module/structure</a></li>
-<li>Building An Application: <a href="https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev/tree/module/book_app">module/book_app</a></li>
-<li>Making <code>fetch</code> requests: <a href="https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev/tree/module/restful_apis">module/restful_apis</a></li>
-<li>Helping LLMs Understand APIs: <a href="https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev/tree/module/agents_and_apis">module/agents_and_apis</a></li>
-</ul>
-<!-- TOC:END -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <!-- Allow cross-origin requests; htmx:validateUrl below restricts them to
+         a single allowlisted URL. -->
+    <meta name="htmx-config" content='{"selfRequestsOnly": false}' />
+    <title>ft-ai-2-frontend-dev</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Elms+Sans:wght@400;700&family=Inconsolata:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.10/dist/htmx.min.js"
+      integrity="sha384-H5SrcfygHmAuTDZphMHqBJLc3FhssKjG7w/CeCpFReSfwBWDTKpkzPP8c+cLsK+V"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/marked@18.0.5/lib/marked.umd.js"
+      integrity="sha384-ZD0fTOwPMHi7zM6WTVIWJR21I07lq0ccnqz3J6WMvQKG9thh4y7TA1QE6PJu0Af8"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <!--
+      Render Markdown through htmx, based on the mdmx technique
+      (https://uniras.github.io/mdmx/). htmx fetches the canonical README from
+      raw.githubusercontent.com on load; the htmx:beforeSwap handler below
+      converts the response to HTML before htmx swaps it in, so there is no
+      flash of raw Markdown.
+    -->
+    <main
+      class="markdown"
+      hx-get="https://raw.githubusercontent.com/4GeeksAcademy/ft-ai-2-frontend-dev/refs/heads/main/README.md"
+      hx-trigger="load"
+      hx-swap="innerHTML"
+    >
+      Loading…
+    </main>
+
+    <noscript>
+      This page renders its content with JavaScript. View
+      <a href="https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev#readme">the README on GitHub</a>
+      instead.
+    </noscript>
+
+    <script>
+      // With selfRequestsOnly disabled, restrict htmx to this single URL.
+      var ALLOWED_URL =
+        "https://raw.githubusercontent.com/4GeeksAcademy/ft-ai-2-frontend-dev/refs/heads/main/README.md";
+
+      document.body.addEventListener("htmx:validateUrl", function (event) {
+        if (event.detail.url.href !== ALLOWED_URL) {
+          event.preventDefault();
+        }
+      });
+
+      document.body.addEventListener("htmx:beforeSwap", function (event) {
+        var elt = event.detail.elt;
+        if (elt && elt.classList && elt.classList.contains("markdown")) {
+          event.detail.serverResponse = marked.parse(event.detail.serverResponse);
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,210 @@
+/* Single-column, mobile-first stylesheet for the docs landing page.
+   Light/dark via prefers-color-scheme. Fonts:
+     - Elms Sans   -> body + headings
+     - Inconsolata -> links (rendered to look like inline code) and code */
+
+:root {
+  color-scheme: light dark;
+
+  /* Text renders immediately in these system fonts, then swaps to the web
+     fonts once they load. The swap itself is delivered by `font-display: swap`
+     in the Google Fonts @font-face rules (the `&display=swap` URL parameter
+     in index.html). */
+  --font-sans: "Elms Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Inconsolata", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --bg: #fafaf9;
+  --fg: #1c1917;
+  --muted: #57534e;
+  --rule: #e7e5e4;
+
+  /* Inline-code / link "chip" surface */
+  --chip-bg: #f0efed;
+  --chip-border: #e2dfdb;
+  --code-fg: #1c1917;
+  --link-fg: #1e40af;
+  --link-fg-hover: #1e3a8a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1917;
+    --fg: #e7e5e4;
+    --muted: #a8a29e;
+    --rule: #292524;
+
+    --chip-bg: #292524;
+    --chip-border: #3a352f;
+    --code-fg: #e7e5e4;
+    --link-fg: #93c5fd;
+    --link-fg-hover: #bfdbfe;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 1.5rem 1.25rem 4rem;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Single column: constrain and center once there's room. */
+.markdown {
+  width: 100%;
+  max-width: 44rem;
+  margin: 0 auto;
+}
+
+@media (min-width: 40rem) {
+  body {
+    padding-top: 3rem;
+    font-size: 1.125rem;
+  }
+}
+
+/* Headings ---------------------------------------------------------------- */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 2rem 0 0.75rem;
+}
+
+h1 {
+  font-size: 1.9rem;
+  margin-top: 0;
+}
+
+h2 {
+  font-size: 1.45rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+h3 {
+  font-size: 1.2rem;
+}
+
+p {
+  margin: 0 0 1rem;
+}
+
+ul,
+ol {
+  margin: 0 0 1rem;
+  padding-left: 1.4rem;
+}
+
+li {
+  margin: 0.35rem 0;
+}
+
+li::marker {
+  color: var(--muted);
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  margin: 2rem 0;
+}
+
+/* Links styled to look like inline code -------------------------------- */
+a {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.95em;
+  color: var(--link-fg);
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-border);
+  border-radius: 0.35em;
+  padding: 0.08em 0.4em;
+  text-decoration: none;
+  word-break: break-word;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+a:hover,
+a:focus-visible {
+  color: var(--link-fg-hover);
+  background: var(--rule);
+}
+
+/* Inline code: same chip shape, neutral text. */
+code {
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+  color: var(--code-fg);
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-border);
+  border-radius: 0.35em;
+  padding: 0.08em 0.4em;
+}
+
+pre {
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-border);
+  border-radius: 0.6rem;
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+pre code {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 0.9rem;
+}
+
+/* A heading that is also a link should read as a normal heading:
+   the heading font wins over the link font, and the code-chip chrome
+   is removed. */
+h1 a,
+h2 a,
+h3 a,
+h4 a,
+h5 a,
+h6 a {
+  font-family: inherit;
+  font-weight: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+}
+
+h1 a:hover,
+h2 a:hover,
+h3 a:hover,
+h4 a:hover,
+h5 a:hover,
+h6 a:hover,
+h1 a:focus-visible,
+h2 a:focus-visible,
+h3 a:focus-visible,
+h4 a:focus-visible,
+h5 a:focus-visible,
+h6 a:focus-visible {
+  color: inherit;
+  background: none;
+  text-decoration: underline;
+}

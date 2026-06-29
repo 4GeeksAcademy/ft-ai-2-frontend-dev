@@ -18,20 +18,20 @@
 # finds the old TOC section heuristically, replaces it with the marked block,
 # and adds the markers for future runs.
 #
-# Only main publishes docs/index.html (GitHub Pages). That file is regenerated
-# with `marked` on main alone.
+# Only main publishes GitHub Pages (from docs/). The Pages site is a static
+# htmx shell (docs/index.html) that fetches and renders the canonical README
+# directly from raw.githubusercontent.com, so no docs/ files need regenerating.
 #
 # Usage:
 #   scripts/sync-toc.sh            # dry run: show what would change, push nothing
 #   scripts/sync-toc.sh --push     # commit and push the changes to each branch
 #
-# Requirements: git (with push access to origin), node/npx.
+# Requirements: git (with push access to origin).
 
 set -euo pipefail
 
 REPO_URL="https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev.git"
 SOURCE_BRANCH="main"
-MARKED_VERSION="18"
 TOC_START='<!-- TOC:START -->'
 TOC_END='<!-- TOC:END -->'
 
@@ -133,17 +133,9 @@ echo "Canonical TOC block (from $SOURCE_BRANCH):"
 sed 's/^/    /' "$WORKDIR/toc-block.md"
 echo
 
-# 2. Regenerate docs/index.html on main only.
-echo "=== $SOURCE_BRANCH (docs/index.html) ==="
-if [ -f docs/index.html ]; then
-  npx --yes "marked@$MARKED_VERSION" -i README.md -o docs/index.html
-  git add docs/index.html
-  commit_and_report "Rebuild docs/index.html from README"
-else
-  echo "  no docs/index.html on $SOURCE_BRANCH, skipping"
-fi
-
-# 3. Patch the TOC block into every other branch (README only).
+# 2. Patch the TOC block into every other branch (README only). The Pages site
+#    on main is a static htmx shell that fetches README.md straight from
+#    raw.githubusercontent.com, so no docs/ files need regenerating here.
 branches="$(git for-each-ref --format='%(refname:lstrip=3)' refs/remotes/origin \
   | grep -vxE "HEAD|$SOURCE_BRANCH")"
 
