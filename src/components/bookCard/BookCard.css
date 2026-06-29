@@ -1,0 +1,53 @@
+@reference "tailwindcss";
+
+.book-card {
+  @apply flex flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm transition-shadow;
+
+  &:hover {
+    @apply shadow-md;
+  }
+}
+
+.book-card--selected {
+  @apply border-amber-400 ring-2 ring-amber-200;
+}
+
+.book-card__cover {
+  @apply aspect-[3/4] w-full bg-stone-100 object-cover;
+}
+
+.book-card__cover-placeholder {
+  @apply flex aspect-[3/4] w-full items-center justify-center bg-stone-200 text-stone-400;
+}
+
+.book-card__body {
+  @apply flex flex-1 flex-col gap-2 p-4;
+}
+
+.book-card__title {
+  @apply text-lg font-semibold leading-tight text-stone-900;
+}
+
+.book-card__author {
+  @apply text-sm text-stone-600;
+}
+
+.book-card__meta {
+  @apply mt-auto flex flex-wrap gap-2 text-xs text-stone-500;
+}
+
+.book-card__badge {
+  @apply rounded-full px-2 py-0.5 font-medium;
+}
+
+.book-card__badge--awesome {
+  @apply bg-amber-100 text-amber-800;
+}
+
+.book-card__badge--read {
+  @apply bg-emerald-100 text-emerald-800;
+}
+
+.book-card__details {
+  @apply flex flex-col gap-0.5 text-xs text-stone-500;
+}

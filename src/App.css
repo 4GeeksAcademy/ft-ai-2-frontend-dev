@@ -1,0 +1,61 @@
+@reference "tailwindcss";
+
+.library-app {
+  @apply mx-auto min-h-screen max-w-7xl px-4 py-8 sm:px-6 lg:px-8;
+}
+
+.library-app__header {
+  @apply mb-8;
+}
+
+.library-app__title {
+  @apply text-3xl font-bold tracking-tight text-stone-900;
+}
+
+.library-app__subtitle {
+  @apply mt-1 text-stone-600;
+}
+
+.library-app__layout {
+  @apply grid gap-8 lg:grid-cols-[1fr_22rem];
+}
+
+.library-app__main {
+  @apply flex flex-col gap-6;
+}
+
+.library-app__toolbar {
+  @apply flex items-center justify-between;
+}
+
+.library-app__count {
+  @apply text-sm text-stone-500;
+}
+
+.library-app__grid {
+  @apply grid gap-4 sm:grid-cols-2 xl:grid-cols-3;
+}
+
+.library-app__empty {
+  @apply rounded-xl border border-dashed border-stone-300 bg-white p-12 text-center text-stone-500;
+}
+
+.library-app__error {
+  @apply rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700;
+}
+
+.library-app__loading {
+  @apply text-center text-stone-500;
+}
+
+.library-app__sidebar {
+  @apply flex flex-col gap-6;
+}
+
+.library-app__panel {
+  @apply rounded-xl border border-stone-200 bg-white p-6 shadow-sm;
+}
+
+.library-app__panel--danger {
+  @apply border-red-200;
+}

@@ -1,0 +1,57 @@
+@reference "tailwindcss";
+
+.delete-confirm-modal {
+  @apply fixed inset-0 z-50 flex items-center justify-center p-4;
+}
+
+.delete-confirm-modal__backdrop {
+  @apply absolute inset-0 bg-stone-900/50;
+}
+
+.delete-confirm-modal__dialog {
+  @apply relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl;
+}
+
+.delete-confirm-modal__title {
+  @apply text-lg font-semibold text-stone-900;
+}
+
+.delete-confirm-modal__message {
+  @apply mt-2 text-sm text-stone-600;
+}
+
+.delete-confirm-modal__book-title {
+  @apply font-medium text-stone-900;
+}
+
+.delete-confirm-modal__actions {
+  @apply mt-6 flex justify-end gap-2;
+}
+
+.delete-confirm-modal__button {
+  @apply rounded-lg px-4 py-2 text-sm font-medium transition-colors;
+}
+
+.delete-confirm-modal__button--cancel {
+  @apply border border-stone-300 bg-white text-stone-700;
+
+  &:hover {
+    @apply bg-stone-50;
+  }
+}
+
+.delete-confirm-modal__button--confirm {
+  @apply bg-red-600 text-white;
+
+  &:hover {
+    @apply bg-red-700;
+  }
+
+  &:disabled {
+    @apply cursor-not-allowed bg-stone-300;
+  }
+}
+
+.delete-confirm-modal__error {
+  @apply mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700;
+}
