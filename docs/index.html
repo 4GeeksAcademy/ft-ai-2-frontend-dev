@@ -32,13 +32,14 @@
     <!--
       Render Markdown through htmx, based on the mdmx technique
       (https://uniras.github.io/mdmx/). htmx fetches the canonical README from
-      raw.githubusercontent.com on load; the htmx:beforeSwap handler below
-      converts the response to HTML before htmx swaps it in, so there is no
-      flash of raw Markdown.
+      raw.githubusercontent.com on load. noHeaders avoids htmx's HX-* request
+      headers, which would trigger a CORS preflight that GitHub's raw host
+      rejects (403). The htmx:beforeSwap handler converts the response to HTML
     -->
     <main
       class="markdown"
       hx-get="https://raw.githubusercontent.com/4GeeksAcademy/ft-ai-2-frontend-dev/refs/heads/main/README.md"
+      hx-request='{"noHeaders": true}'
       hx-trigger="load"
       hx-swap="innerHTML"
     >
