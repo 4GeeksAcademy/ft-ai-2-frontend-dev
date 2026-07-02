@@ -8,12 +8,12 @@ A minimal application for browsing the TMDB API and managing your TMDB account w
 |-------|--------|-------|
 | Phase 1 | **Complete** | Placeholder UI, components, in-memory watchlist |
 | Phase 2a | **Complete** | TMDB browse/search, layout, loading & error states |
-| Phase 2b | Not started | TMDB user authentication |
-| Phase 2c | Not started | TMDB watchlist API sync |
+| Phase 2b | **Complete** | TMDB login redirect, session persistence, auth UI |
+| Phase 2c | **Complete** | TMDB watchlist API sync |
 
 **Also implemented (not originally phased):** dark mode via system `prefers-color-scheme` preference.
 
-**Current watchlist behavior:** In-memory only (stored as full `Movie` objects in Zustand). Persists while the app is open but is not synced to TMDB until Phase 2c. No login required yet.
+**Current watchlist behavior:** Synced with the TMDB account watchlist API. Fetched on login and page refresh; add/remove calls the account watchlist endpoint and refetches.
 
 ## Prerequisites
 
@@ -102,9 +102,11 @@ Watchlist features require a TMDB **user session**, not just the read token. The
 ### Login flow
 
 1. `GET /authentication/token/new` → `request_token`
-2. Redirect the user to `https://www.themoviedb.org/authenticate/{request_token}`
-3. After the user approves, `GET /authentication/session/new?request_token=...` → `session_id`
-4. `GET /account?session_id=...` → `account_id`
+2. Redirect the user to `https://www.themoviedb.org/authenticate/{request_token}?redirect_to={app_url}`
+3. After the user approves, `POST /authentication/session/new` with `{ "request_token": "..." }` → `session_id`
+4. `GET /account?session_id=...` → `account_id` and `username`
+
+A `tmdb_login_pending` flag in `sessionStorage` tracks in-progress logins across the redirect.
 
 ### Session storage
 
@@ -144,7 +146,7 @@ Search and genre filter can be used together.
 
 - **Left:** filters and search
 - **Middle:** results. On initial load, display Now Playing movies
-- **Right:** watchlist *(login required in Phase 2b/2c; currently works in-memory without auth)*
+- **Right:** watchlist (login required; shows login prompt when logged out)
 
 Use Tailwind's `md:` breakpoint for the desktop layout.
 
@@ -160,7 +162,7 @@ Use Tailwind's `md:` breakpoint for the desktop layout.
 
 - `MovieCard`: Horizontal card with poster on the left and details on the right. `WatchlistButton` in the top-right corner.
 - `MovieCardSmall`: Compact card for the watchlist column — poster, title, genre, and a remove button only.
-- `WatchlistButton`: Toggles add/remove. Shows `+` when the movie is not on the watchlist, `−` when it is. Disabled when logged out (Phase 2c).
+- `WatchlistButton`: Toggles add/remove. Shows `+` when the movie is not on the watchlist, `−` when it is. Disabled when logged out.
 
 **Layout & browse (Phase 2a)**
 
@@ -168,8 +170,12 @@ Use Tailwind's `md:` breakpoint for the desktop layout.
 - `SearchBar`: Debounced search input (local state; submits to store after 300ms)
 - `GenreFilter`: Genre dropdown populated from TMDB
 - `MovieResults`: Results list with loading skeletons, error/retry, and empty states
-- `WatchlistPanel`: Watchlist column with empty-state message
+- `WatchlistPanel`: Watchlist column; login prompt when logged out, list when logged in
 - `MobileNav`: Expanding top menu for switching sections on mobile
+
+**Authentication (Phase 2b)**
+
+- `AuthBar`: Header login/logout controls and signed-in username display
 
 ### UI states
 
@@ -192,15 +198,19 @@ Use Tailwind's `md:` breakpoint for the desktop layout.
 - Genre list and active genre filter
 - Loading and error flags
 - `searchQuery`, `browseMode` (`now_playing` | `search`)
-- `watchlist`: full `Movie` objects (in-memory until Phase 2c)
-- `sessionId`, `accountId` *(Phase 2b — not yet implemented)*
+- `watchlist`: full `Movie` objects fetched from TMDB
+- `watchlistLoading`, `watchlistMutating`, `watchlistError`
+
+**Zustand (global)** — `useAuthStore`
+
+- `sessionId`, `accountId`, `username`
+- `authLoading`, `authError`
+- Login, logout, session restore, and post-redirect callback handling
 
 **Component-local**
 
 - Search input value (debounced before updating global query)
 - Mobile menu open/closed and active section
-
-**Phase 2c target:** Watchlist state becomes **server-backed** — fetch from TMDB on login and after add/remove. Update the local cache on success; do not rely on local-only toggles.
 
 **Zustand selector rule:** Selectors must return stable references (primitives or store state directly). Never return a newly allocated array/object from a selector — use `useMemo` in the component instead.
 
@@ -212,6 +222,7 @@ src/
     MovieCard.tsx
     MovieCardSmall.tsx
     WatchlistButton.tsx
+    AuthBar.tsx
     FiltersPanel.tsx
     SearchBar.tsx
     GenreFilter.tsx
@@ -220,8 +231,10 @@ src/
     MobileNav.tsx
   stores/
     useMovieStore.ts
+    useAuthStore.ts
   services/
     tmdb.ts
+    auth.ts
   types/
     movie.ts
     tmdb.ts
@@ -272,7 +285,7 @@ src/
 - [x] Search returns results; empty state shown when none
 - [x] Genre filter narrows the visible results
 
-### Phase 2b: TMDB authentication
+### Phase 2b: TMDB authentication ✅
 
 **Goal:** Understand user-level API access vs app-level read tokens.
 
@@ -282,11 +295,11 @@ src/
 
 **Acceptance criteria**
 
-- [ ] User can log in via TMDB and return to the app with an active session
-- [ ] Session persists across page refresh (same tab)
-- [ ] Log out clears session and watchlist cache
+- [x] User can log in via TMDB and return to the app with an active session
+- [x] Session persists across page refresh (same tab)
+- [x] Log out clears session and watchlist cache
 
-### Phase 2c: Watchlist API integration
+### Phase 2c: Watchlist API integration ✅
 
 **Goal:** Mutate server state and keep the UI in sync.
 
@@ -297,10 +310,10 @@ src/
 
 **Acceptance criteria**
 
-- [ ] Watchlist loads after login
-- [ ] Add/remove syncs with TMDB and updates the UI
-- [ ] Watchlist column shows login prompt when logged out
-- [ ] Changes appear on [themoviedb.org](https://www.themoviedb.org/) when viewing the same account
+- [x] Watchlist loads after login
+- [x] Add/remove syncs with TMDB and updates the UI
+- [x] Watchlist column shows login prompt when logged out
+- [x] Changes appear on [themoviedb.org](https://www.themoviedb.org/) when viewing the same account
 
 ## Extension Ideas
 
@@ -317,3 +330,4 @@ src/
 - **Env vars:** Must be prefixed with `VITE_` to be available in the browser bundle
 - **CORS:** TMDB allows browser requests; no proxy needed for this project
 - **Zustand selectors:** Returning a new array/object from a selector (e.g. `.map()` or a getter that allocates) causes infinite re-renders. Select primitives or stable store references; derive computed lists with `useMemo`
+- **Auth redirect:** Store `request_token` and a `login_pending` flag before redirecting to TMDB; complete the session exchange on return, not on every page load

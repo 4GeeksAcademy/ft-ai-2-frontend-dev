@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { Movie } from "../types/movie";
 import { buildGenreNameMap, formatGenres, posterUrl } from "../types/movie";
+import { useAuthStore } from "../stores/useAuthStore";
 import { useMovieStore } from "../stores/useMovieStore";
 import { WatchlistButton } from "./WatchlistButton";
 
@@ -9,11 +10,14 @@ type MovieCardProps = {
 };
 
 export function MovieCard({ movie }: MovieCardProps) {
+  const sessionId = useAuthStore((state) => state.sessionId);
   const genres = useMovieStore((state) => state.genres);
   const isInWatchlist = useMovieStore((state) =>
     state.watchlist.some((item) => item.id === movie.id),
   );
   const toggleWatchlist = useMovieStore((state) => state.toggleWatchlist);
+  const watchlistMutating = useMovieStore((state) => state.watchlistMutating);
+  const isAuthenticated = sessionId !== null;
   const genreNames = useMemo(() => buildGenreNameMap(genres), [genres]);
   const src = posterUrl(movie.posterPath);
   const year = movie.releaseDate ? movie.releaseDate.slice(0, 4) : "—";
@@ -23,7 +27,8 @@ export function MovieCard({ movie }: MovieCardProps) {
       <div className="absolute right-3 top-3">
         <WatchlistButton
           inWatchlist={isInWatchlist}
-          onClick={() => toggleWatchlist(movie.id)}
+          onClick={() => void toggleWatchlist(movie.id)}
+          disabled={!isAuthenticated || watchlistMutating}
         />
       </div>
 

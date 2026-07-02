@@ -23,3 +23,20 @@ export type TmdbGenre = {
 export type TmdbGenreListResponse = {
   genres: TmdbGenre[];
 };
+
+export type TmdbRequestTokenResponse = {
+  success: boolean;
+  expires_at: string;
+  request_token: string;
+};
+
+export type TmdbSessionResponse = {
+  success: boolean;
+  session_id: string;
+};
+
+export type TmdbAccount = {
+  id: number;
+  username: string;
+  name: string;
+};

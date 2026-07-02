@@ -9,7 +9,11 @@ export function WatchlistButton({
   onClick,
   disabled = false,
 }: WatchlistButtonProps) {
-  const label = inWatchlist ? "Remove from watchlist" : "Add to watchlist";
+  const label = disabled
+    ? "Log in to manage watchlist"
+    : inWatchlist
+      ? "Remove from watchlist"
+      : "Add to watchlist";
 
   return (
     <button

@@ -11,6 +11,7 @@ type MovieCardSmallProps = {
 export function MovieCardSmall({ movie }: MovieCardSmallProps) {
   const genres = useMovieStore((state) => state.genres);
   const removeFromWatchlist = useMovieStore((state) => state.removeFromWatchlist);
+  const watchlistMutating = useMovieStore((state) => state.watchlistMutating);
   const genreNames = useMemo(() => buildGenreNameMap(genres), [genres]);
   const src = posterUrl(movie.posterPath);
 
@@ -41,7 +42,8 @@ export function MovieCardSmall({ movie }: MovieCardSmallProps) {
 
       <WatchlistButton
         inWatchlist
-        onClick={() => removeFromWatchlist(movie.id)}
+        onClick={() => void removeFromWatchlist(movie.id)}
+        disabled={watchlistMutating}
       />
     </article>
   );

@@ -18,10 +18,12 @@ function getToken(): string {
   return token;
 }
 
-async function tmdbFetch<T>(path: string): Promise<T> {
+async function tmdbFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(`${TMDB_BASE}${path}`, {
+    ...options,
     headers: {
       Authorization: `Bearer ${getToken()}`,
+      ...options.headers,
     },
   });
 
@@ -68,4 +70,40 @@ export async function fetchGenres(): Promise<TmdbGenre[]> {
     "/genre/movie/list?language=en-US",
   );
   return data.genres;
+}
+
+export async function fetchWatchlistMovies(
+  accountId: number,
+  sessionId: string,
+): Promise<Movie[]> {
+  const params = new URLSearchParams({
+    session_id: sessionId,
+    language: "en-US",
+    page: "1",
+  });
+  const data = await tmdbFetch<TmdbPagedResponse<TmdbMovieResult>>(
+    `/account/${accountId}/watchlist/movies?${params}`,
+  );
+  return data.results.map(mapTmdbMovie);
+}
+
+export async function setWatchlistItem(
+  accountId: number,
+  sessionId: string,
+  movieId: number,
+  onWatchlist: boolean,
+): Promise<void> {
+  const params = new URLSearchParams({ session_id: sessionId });
+  await tmdbFetch<{ success: boolean }>(
+    `/account/${accountId}/watchlist?${params}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        media_type: "movie",
+        media_id: movieId,
+        watchlist: onWatchlist,
+      }),
+    },
+  );
 }

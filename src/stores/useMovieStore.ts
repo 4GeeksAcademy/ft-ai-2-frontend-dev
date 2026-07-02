@@ -2,10 +2,13 @@ import { create } from "zustand";
 import {
   fetchGenres,
   fetchNowPlaying,
+  fetchWatchlistMovies,
   searchMovies,
+  setWatchlistItem,
 } from "../services/tmdb";
 import type { Movie } from "../types/movie";
 import type { TmdbGenre } from "../types/tmdb";
+import { useAuthStore } from "./useAuthStore";
 
 type BrowseMode = "now_playing" | "search";
 
@@ -18,15 +21,21 @@ type MovieStore = {
   loading: boolean;
   error: string | null;
   watchlist: Movie[];
+  watchlistLoading: boolean;
+  watchlistMutating: boolean;
+  watchlistError: string | null;
   initialize: () => Promise<void>;
   fetchNowPlaying: () => Promise<void>;
   submitSearch: (query: string) => Promise<void>;
   clearSearch: () => Promise<void>;
   setSelectedGenre: (genreId: number | null) => void;
   retry: () => Promise<void>;
-  addToWatchlist: (movieId: number) => void;
-  removeFromWatchlist: (movieId: number) => void;
-  toggleWatchlist: (movieId: number) => void;
+  fetchWatchlist: () => Promise<void>;
+  retryWatchlist: () => Promise<void>;
+  clearWatchlist: () => void;
+  addToWatchlist: (movieId: number) => Promise<void>;
+  removeFromWatchlist: (movieId: number) => Promise<void>;
+  toggleWatchlist: (movieId: number) => Promise<void>;
 };
 
 export const useMovieStore = create<MovieStore>((set, get) => ({
@@ -38,6 +47,9 @@ export const useMovieStore = create<MovieStore>((set, get) => ({
   loading: false,
   error: null,
   watchlist: [],
+  watchlistLoading: false,
+  watchlistMutating: false,
+  watchlistError: null,
 
   initialize: async () => {
     set({ loading: true, error: null });
@@ -110,27 +122,90 @@ export const useMovieStore = create<MovieStore>((set, get) => ({
     }
   },
 
-  addToWatchlist: (movieId) =>
-    set((state) => {
-      if (state.watchlist.some((movie) => movie.id === movieId)) {
-        return state;
-      }
-      const movie = state.movies.find((item) => item.id === movieId);
-      if (!movie) return state;
-      return { watchlist: [...state.watchlist, movie] };
+  fetchWatchlist: async () => {
+    const { sessionId, accountId } = useAuthStore.getState();
+    if (!sessionId || !accountId) {
+      set({ watchlist: [], watchlistLoading: false, watchlistError: null });
+      return;
+    }
+
+    set({ watchlistLoading: true, watchlistError: null });
+    try {
+      const watchlist = await fetchWatchlistMovies(accountId, sessionId);
+      set({ watchlist, watchlistLoading: false });
+    } catch (error) {
+      set({
+        watchlistLoading: false,
+        watchlistError:
+          error instanceof Error ? error.message : "Failed to load watchlist",
+      });
+    }
+  },
+
+  retryWatchlist: async () => {
+    await get().fetchWatchlist();
+  },
+
+  clearWatchlist: () =>
+    set({
+      watchlist: [],
+      watchlistLoading: false,
+      watchlistMutating: false,
+      watchlistError: null,
     }),
 
-  removeFromWatchlist: (movieId) =>
-    set((state) => ({
-      watchlist: state.watchlist.filter((movie) => movie.id !== movieId),
-    })),
+  addToWatchlist: async (movieId) => {
+    const { sessionId, accountId } = useAuthStore.getState();
+    if (!sessionId || !accountId) return;
 
-  toggleWatchlist: (movieId) => {
+    const { watchlist } = get();
+    if (watchlist.some((movie) => movie.id === movieId)) return;
+
+    set({ watchlistMutating: true, watchlistError: null });
+    try {
+      await setWatchlistItem(accountId, sessionId, movieId, true);
+      await get().fetchWatchlist();
+    } catch (error) {
+      set({
+        watchlistMutating: false,
+        watchlistError:
+          error instanceof Error ? error.message : "Failed to add to watchlist",
+      });
+      return;
+    }
+    set({ watchlistMutating: false });
+  },
+
+  removeFromWatchlist: async (movieId) => {
+    const { sessionId, accountId } = useAuthStore.getState();
+    if (!sessionId || !accountId) return;
+
+    set({ watchlistMutating: true, watchlistError: null });
+    try {
+      await setWatchlistItem(accountId, sessionId, movieId, false);
+      await get().fetchWatchlist();
+    } catch (error) {
+      set({
+        watchlistMutating: false,
+        watchlistError:
+          error instanceof Error
+            ? error.message
+            : "Failed to remove from watchlist",
+      });
+      return;
+    }
+    set({ watchlistMutating: false });
+  },
+
+  toggleWatchlist: async (movieId) => {
+    const { sessionId } = useAuthStore.getState();
+    if (!sessionId) return;
+
     const { watchlist, addToWatchlist, removeFromWatchlist } = get();
     if (watchlist.some((movie) => movie.id === movieId)) {
-      removeFromWatchlist(movieId);
+      await removeFromWatchlist(movieId);
     } else {
-      addToWatchlist(movieId);
+      await addToWatchlist(movieId);
     }
   },
 }));

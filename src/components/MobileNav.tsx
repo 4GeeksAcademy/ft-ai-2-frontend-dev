@@ -20,7 +20,7 @@ export function MobileNav({ activeSection, onSectionChange }: MobileNavProps) {
     sections.find((section) => section.id === activeSection)?.label ?? "Menu";
 
   return (
-    <div className="border-b border-slate-200 bg-white md:hidden dark:border-slate-800 dark:bg-slate-900">
+    <div className="sticky top-0 z-20 border-b border-slate-200 bg-white md:hidden dark:border-slate-800 dark:bg-slate-900">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
