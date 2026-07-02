@@ -1,7 +1,6 @@
 # ft-ai-2-frontend-dev
 
 <!-- TOC:START -->
-
 ## Module Demonstrations
 
 Each demonstration lives on its own branch:
