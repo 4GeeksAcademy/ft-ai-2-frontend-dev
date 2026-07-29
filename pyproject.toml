@@ -9,6 +9,7 @@ authors = [
 requires-python = ">=3.12"
 dependencies = [
     "fastapi[standard]>=0.140.13",
+    "scalar-fastapi>=1.8.2",
 ]
 
 [build-system]
