@@ -1,6 +1,7 @@
 # ft-ai-2-frontend-dev
 
 <!-- TOC:START -->
+
 ## Module Demonstrations
 
 Each demonstration lives on its own branch:
@@ -13,6 +14,7 @@ Each demonstration lives on its own branch:
 - Helping LLMs Understand APIs: [module/agents_and_apis](https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev/tree/module/agents_and_apis)
 - Server VS Client Components: [module/server_client_divide](https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev/tree/module/server_client_divide)
 - API Concepts Review: [module/api_review](https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev/tree/module/api_review)
+- Python [module/python](https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev/tree/module/python)
 <!-- TOC:END -->
 
 ## Movie Browser & the TMDB API
