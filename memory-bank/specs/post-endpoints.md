@@ -88,7 +88,7 @@ class PostRead(BaseModel):
 
 ### Update Post
 
-`PATCH /post` - Allows the frontend to update a Post object in the API if they are the owner.
+`PATCH /post/{post_id}` - Allows the frontend to update a Post object in the API if they are the owner.
 
 **Request body:**
 
