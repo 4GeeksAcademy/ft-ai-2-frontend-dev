@@ -5,6 +5,7 @@
 We can start building out larger applications if we plan our project out using a `SPEC.md` file.  We'll have some more comprehensive tools for managing project complexity (and handling an agent's context) soon, but this is our first step past prompting an agent from the chat.
 
 <!-- TOC:START -->
+
 ## Module Demonstrations
 
 Each demonstration lives on its own branch:
@@ -17,4 +18,5 @@ Each demonstration lives on its own branch:
 - Helping LLMs Understand APIs: [module/agents_and_apis](https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev/tree/module/agents_and_apis)
 - Server VS Client Components: [module/server_client_divide](https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev/tree/module/server_client_divide)
 - API Concepts Review: [module/api_review](https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev/tree/module/api_review)
+- Python [module/python](https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev/tree/module/python)
 <!-- TOC:END -->
