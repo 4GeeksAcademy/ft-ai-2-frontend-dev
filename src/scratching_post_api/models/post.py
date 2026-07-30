@@ -4,6 +4,16 @@ from pydantic import BaseModel
 
 from src.scratching_post_api.models.media import MediaItem
 
+
+class PostBase(BaseModel):
+    id: int | None
+    content: str
+    author: int | None
+    response_to: int | None
+    created: datetime
+    media: list["MediaItem"]
+
+
 class PostCreate(BaseModel):
     """
     This is the model that the frontend sends to the backend
@@ -29,11 +39,6 @@ class PostRead(BaseModel):
     response_to: int | None
     created: datetime
     media: list["MediaItem"]
-
-
-class PaginationReq(BaseModel):
-    offset: int | None
-    count: int | None
 
 
 class PostReadMany(BaseModel):
