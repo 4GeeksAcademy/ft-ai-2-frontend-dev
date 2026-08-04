@@ -1,5 +1,7 @@
 # ft-ai-2-frontend-dev
 
+Python experiments and agent-building exercises.
+
 <!-- TOC:START -->
 
 ## Module Demonstrations
@@ -21,43 +23,53 @@ Each demonstration lives on its own branch:
 - File I/O Example: [module/file-io-example](https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev/tree/module/file-io-example)
 <!-- TOC:END -->
 
-## How This Page Works
+## Agent Loop
 
-You're likely reading this on our [GitHub Pages site](https://4geeksacademy.github.io/ft-ai-2-frontend-dev/),
-which is served from the `docs/` folder. What's interesting is that the page you
-see is **not** a pre-built HTML file — it's a tiny shell that fetches this very
-`README.md` and renders it in your browser, live. Here's the chain of events:
+This branch (`module/agent-loop`) contains a terminal-based chatbot — the **Simple Agent Loop** — built with Python, [tcod](https://python-tcod.readthedocs.io/) for the terminal UI, and [LiteLLM](https://litellm.vercel.app/) for LLM access.
 
-1. **The page loads `docs/index.html`.** It contains almost no content — just an
-   empty `<main>` element and two `<script>` tags from a CDN: [htmx](https://htmx.org/)
-   (for fetching) and [marked](https://marked.js.org/) (for turning Markdown into HTML).
-2. **htmx fetches the Markdown.** The `<main>` element carries
-   `hx-get="…/README.md"` and `hx-trigger="load"`, which tells htmx: "as soon as
-   you load, make a GET request to this URL." htmx pulls the raw README straight
-   from GitHub.
-3. **We convert Markdown to HTML before it's shown.** A listener on htmx's
-   `htmx:beforeSwap` event runs the fetched text through `marked.parse()`, so the
-   raw `#` and `-` characters become real headings and lists instead of appearing
-   as plain text.
-4. **A stylesheet makes it readable.** `docs/styles.css` adds a mobile-first,
-   single-column layout with light/dark mode.
+### Quick Start
 
-A couple of details worth noticing, because they're common real-world snags:
+```bash
+# Install dependencies
+uv sync
 
-- **CORS.** Because the page is served from one origin (GitHub Pages) but fetches
-  from another (`raw.githubusercontent.com`), the browser enforces
-  [Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
-  rules. htmx normally adds custom `HX-*` request headers, which would trigger a
-  stricter "preflight" check that GitHub's raw host rejects. We set
-  `hx-request='{"noHeaders": true}'` to skip those headers and keep it a simple
-  request.
-- **Security.** htmx can be configured to refuse cross-origin requests entirely.
-  We deliberately allow them but then lock things down with an
-  [`htmx:validateUrl`](https://htmx.org/events/#htmx:validateUrl) handler that
-  blocks every URL except the one README we expect.
+# Configure your LLM (copy and fill in)
+cp .env.example .env
 
-Want to explore further? Start with the [htmx documentation](https://htmx.org/docs/) —
-it's an approachable introduction to adding dynamic behavior to plain HTML without
-writing much JavaScript. The full list of events we hooked into (like
-`htmx:beforeSwap` and `htmx:validateUrl`) lives in the
-[events reference](https://htmx.org/events/).
+# Run the chatbot
+uv run agent-loop
+```
+
+### Environment Variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `LITELLM_API_KEY` | Yes | — | API key for the LLM provider |
+| `LITELLM_MODEL` | No | `litellm/downtown-miami/openrouter/deepseek/deepseek-v4-flash` | Model identifier |
+| `LITELLM_BASE_URL` | No | `https://llm.4geeks.ai/v1` | API base URL |
+
+### Project Structure
+
+```
+src/agent_loop/
+├── __init__.py   # Entrypoint — wires everything together
+├── config.py     # Environment / .env config loading
+├── llm.py        # LiteLLM integration
+├── ui.py         # tcod terminal UI (scrollable chat, text input)
+└── chat.py       # Chat loop — ties UI to LLM
+```
+
+### Controls
+
+| Key | Action |
+|-----|--------|
+| Type + Enter | Send message |
+| ↑ / ↓ | Scroll chat history |
+| PgUp / PgDn | Scroll by page |
+| Ctrl+C | Exit |
+| `/exit` + Enter | Exit |
+
+### How This Page Works
+
+For all other branches, the page renders a live Markdown-to-HTML preview served from the `docs/` folder using htmx and marked.js:
+
