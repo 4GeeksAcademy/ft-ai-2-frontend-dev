@@ -102,7 +102,7 @@ class ChatUI:
         sep_char = tcod.constants.CHAR_HLINE if hasattr(
             tcod.constants, "CHAR_HLINE") else ord("─")
         for x in range(CONSOLE_WIDTH):
-            self.console.rgb[x, 1] = sep_char, COLOUR_SEPARATOR, COLOUR_BG
+            self.console.rgb[1, x] = sep_char, COLOUR_SEPARATOR, COLOUR_BG
 
     def _draw_messages(self) -> None:
         """Draw the scrollable message area (rows 2 … height-2)."""
