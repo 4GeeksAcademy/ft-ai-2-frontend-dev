@@ -147,7 +147,7 @@ class ChatUI:
         ks = tcod.event.KeySym
 
         # --- quit on Ctrl+C ---
-        if sym == ks.c and (event.mod & (tcod.event.Modifier.LCTRL | tcod.event.Modifier.RCTRL)):
+        if sym == ks.C and (event.mod & (tcod.event.Modifier.LCTRL | tcod.event.Modifier.RCTRL)):
             raise SystemExit(0)
 
         # --- submit ---
