@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import litellm
-
 from agent_loop.config import Config
 from agent_loop.llm import ask_llm
 from agent_loop.ui import ChatUI
@@ -32,12 +30,8 @@ def run_chat(config: Config) -> None:
             # Replace loading message with the actual response
             ui.messages.pop()  # remove the "thinking …" line
             ui.add_message("Agent", response)
-        except litellm.exceptions.LiteLLMException as exc:
+        except Exception as exc:  # noqa: BLE001
             ui.messages.pop()  # remove the "thinking …" line
             ui.add_message("Error", f"{exc!s}")
-        except Exception:  # noqa: BLE001 — catch-all for unexpected crashes
-            ui.messages.pop()
-            ui.add_message(
-                "Error", "An unexpected error occurred. Please try again.")
 
     ui.run(on_message=handle_message)

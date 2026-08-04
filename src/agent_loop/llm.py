@@ -18,7 +18,7 @@ def ask_llm(prompt: str, config: Config) -> str:
         The LLM's response as a string.
 
     Raises:
-        litellm.exceptions.LiteLLMException: On API / network / auth errors.
+        litellm.exceptions.BadRequestError: On API / network / auth errors.
     """
     response = completion(
         model=config.model,
