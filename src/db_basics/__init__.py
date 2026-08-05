@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from tinydb import TinyDB
 from tinydb.storages import JSONStorage
 
-from src.db_basics.middleware import PydanticMiddleware
+from src.db_basics.middleware import PydanticMiddleware, model_table
 
 
 # ==========================================================================
@@ -50,20 +50,14 @@ class Watches(BaseModel):
 
 
 # ==========================================================================
-# PydanticMiddleware demo — two ways to wire it up
+# Database setup with PydanticMiddleware
 # ==========================================================================
 
-# ── Option A: Single-model shorthand ─────────────────────────────────────
+# The middleware serialises models → dicts on write (so JSONStorage can store
+# them), and validates dicts → models on read (so data corruption is caught).
+
 db = TinyDB("db.json", storage=PydanticMiddleware(JSONStorage, model=Watch))
 
-# Now ``db.all()``, ``db.get(...)``, ``db.search(...)`` return Watch instances,
-# and ``db.insert(...)`` accepts both dicts and Watch instances.
-
-# ── Option B: Per-table model map (for multiple tables in one DB) ────────
-# db = TinyDB(
-#     "db.json",
-#     storage=PydanticMiddleware(JSONStorage, model_map={
-#         "_default": Watch,
-#         "inventory": SomeOtherModel,
-#     }),
-# )
+# ``model_table`` wraps the TinyDB table so that read operations return real
+# Pydantic model instances rather than plain dicts.
+watches = model_table(db, Watch)

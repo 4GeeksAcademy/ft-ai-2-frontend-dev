@@ -21,43 +21,71 @@ Each demonstration lives on its own branch:
 - File I/O Example: [module/file-io-example](https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev/tree/module/file-io-example)
 <!-- TOC:END -->
 
-## How This Page Works
+## PydanticMiddleware — TinyDB meets Pydantic
 
-You're likely reading this on our [GitHub Pages site](https://4geeksacademy.github.io/ft-ai-2-frontend-dev/),
-which is served from the `docs/` folder. What's interesting is that the page you
-see is **not** a pre-built HTML file — it's a tiny shell that fetches this very
-`README.md` and renders it in your browser, live. Here's the chain of events:
+The `src/db_basics/middleware.py` module provides a [TinyDB middleware](https://tinydb.readthedocs.io/en/latest/extend.html#write-custom-middleware)
+that automatically serialises and deserialises data using Pydantic models.
 
-1. **The page loads `docs/index.html`.** It contains almost no content — just an
-   empty `<main>` element and two `<script>` tags from a CDN: [htmx](https://htmx.org/)
-   (for fetching) and [marked](https://marked.js.org/) (for turning Markdown into HTML).
-2. **htmx fetches the Markdown.** The `<main>` element carries
-   `hx-get="…/README.md"` and `hx-trigger="load"`, which tells htmx: "as soon as
-   you load, make a GET request to this URL." htmx pulls the raw README straight
-   from GitHub.
-3. **We convert Markdown to HTML before it's shown.** A listener on htmx's
-   `htmx:beforeSwap` event runs the fetched text through `marked.parse()`, so the
-   raw `#` and `-` characters become real headings and lists instead of appearing
-   as plain text.
-4. **A stylesheet makes it readable.** `docs/styles.css` adds a mobile-first,
-   single-column layout with light/dark mode.
+### What it does
 
-A couple of details worth noticing, because they're common real-world snags:
+| Layer | File | Job |
+|-------|------|-----|
+| `PydanticMiddleware` | `middleware.py` | Storage-level — converts models → dicts on write, validates dicts → models on read |
+| `ModelTable` / `model_table()` | `middleware.py` | Query-level — wraps a TinyDB table so read operations return real Pydantic instances |
 
-- **CORS.** Because the page is served from one origin (GitHub Pages) but fetches
-  from another (`raw.githubusercontent.com`), the browser enforces
-  [Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
-  rules. htmx normally adds custom `HX-*` request headers, which would trigger a
-  stricter "preflight" check that GitHub's raw host rejects. We set
-  `hx-request='{"noHeaders": true}'` to skip those headers and keep it a simple
-  request.
-- **Security.** htmx can be configured to refuse cross-origin requests entirely.
-  We deliberately allow them but then lock things down with an
-  [`htmx:validateUrl`](https://htmx.org/events/#htmx:validateUrl) handler that
-  blocks every URL except the one README we expect.
+### Quick start
 
-Want to explore further? Start with the [htmx documentation](https://htmx.org/docs/) —
-it's an approachable introduction to adding dynamic behavior to plain HTML without
-writing much JavaScript. The full list of events we hooked into (like
-`htmx:beforeSwap` and `htmx:validateUrl`) lives in the
-[events reference](https://htmx.org/events/).
+```python
+from tinydb import TinyDB, Query
+from tinydb.storages import JSONStorage
+from pydantic import BaseModel
+from src.db_basics.middleware import PydanticMiddleware, model_table
+
+# 1. Define your model
+class Watch(BaseModel):
+    brand: str
+    cost: float
+
+# 2. Wire in the middleware
+db = TinyDB("db.json", storage=PydanticMiddleware(JSONStorage, model=Watch))
+
+# 3. Get a typed table handle
+watches = model_table(db, Watch)
+
+# Insert either dicts or model instances
+watches.insert({"brand": "Casio", "cost": 29.99})
+watches.insert(Watch(brand="Rolex", cost=9_999.99))
+
+# Read back as real model instances
+for w in watches.all():           # list[Watch]
+    print(w.brand, w.cost)
+
+w = watches.get(doc_id=1)         # Watch | None
+results = watches.search(Query().brand == "Casio")   # list[Watch]
+```
+
+### Multiple tables
+
+```python
+db = TinyDB(
+    "db.json",
+    storage=PydanticMiddleware(JSONStorage, model_map={
+        "_default": Watch,
+        "inventory": InventoryItem,
+    }),
+)
+items = model_table(db, InventoryItem, table="inventory")
+```
+
+### Real-time validation
+
+With `validate_on_read=True` (the default), every document read from storage
+is checked against the registered model. Corrupted data raises a Pydantic
+`ValidationError` immediately instead of silently propagating bad data.
+
+```python
+db = TinyDB(
+    "db.json",
+    storage=PydanticMiddleware(JSONStorage, model=Watch, validate_on_read=True),
+)
+```
