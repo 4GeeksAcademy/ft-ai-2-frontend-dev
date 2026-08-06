@@ -9,3 +9,4 @@ Wordweb is a concept mapping application meant for use in the browser.  This app
 - A mobile-first web frontend.
 - Fuzzy search in both the word map building view and the browsing view.
 - Clean UI intended for mobile-first viewing.
+
