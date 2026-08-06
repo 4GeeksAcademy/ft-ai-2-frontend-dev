@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+dist/
+*.egg-info/
+
+# Runtime
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment
+.env
+.env.local
+.env*.local
+
+# IDE
+.vscode/settings.json
+
+# OS
+.DS_Store
+Thumbs.db

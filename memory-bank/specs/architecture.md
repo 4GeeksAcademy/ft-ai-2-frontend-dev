@@ -64,6 +64,7 @@
 | Language | Python 3.11+ | Backend logic |
 | Data storage | TinyDB | JSON-based document store |
 | Serialization | Pydantic | Request/response validation |
+| Package management | uv | Fast Python package installer and resolver |
 | Project orchestration | Turborepo | Monorepo management |
 
 ---
@@ -111,8 +112,8 @@ wordweb/
 │       │   └── serializers.py        # UUID serializers
 │       ├── data/
 │       │   └── db.json               # TinyDB data file
-│       ├── requirements.txt
-│       └── pyproject.toml
+│       ├── pyproject.toml            # uv project config + deps
+│       └── uv.lock                   # Locked dependency versions
 │
 ├── package.json               # Root workspace config (turborepo)
 ├── turbo.json

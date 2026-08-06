@@ -13,7 +13,7 @@ be referenced when making changes in the corresponding domain.
 | [backend-safety.md](./backend-safety.md) | FastAPI, Python, and API endpoint safety |
 | [database-safety.md](./database-safety.md) | TinyDB write/read integrity and data safety |
 | [ui-safety.md](./ui-safety.md) | Rendering, graph display, search, and form safety |
-| [process-safety.md](./process-safety.md) | AI collaboration, code review, and development process safety |
+| [process-safety.md](./process-safety.md) | AI collaboration, task scoping, code review, and development process safety |
 
 ## Quick Reference
 

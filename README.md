@@ -1,6 +1,15 @@
 # ft-ai-2-frontend-dev
 
-<!-- TOC:START -->
+## Wordweb — Concept Mapping Application
+
+This repository contains **Wordweb**, a full-stack concept mapping application
+built with NextJS, FastAPI, and Turborepo. The project scaffold lives in the
+[`wordweb/`](./wordweb/) directory.
+
+- [Wordweb README](./wordweb/README.md) — setup, scripts, and project structure
+- [Memory Bank](./memory-bank/) — full specs, architecture, and safety rules
+
+---
 
 ## Module Demonstrations
 
