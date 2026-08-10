@@ -8,8 +8,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
-
-from database import backup_db, get_db  # noqa: F401 — ensure DB is importable
+from database import backup_db, get_db
+from exceptions import AppException, app_exception_handler, generic_exception_handler
 from routers import auth, users
 
 
@@ -30,6 +30,13 @@ app = FastAPI(
     title="ft-ai-2-frontend-dev API",
     lifespan=lifespan,
 )
+
+# ---------------------------------------------------------------------------
+# Exception handlers — consistent error envelope
+# ---------------------------------------------------------------------------
+
+app.add_exception_handler(AppException, app_exception_handler)
+app.add_exception_handler(Exception, generic_exception_handler)
 
 # ---------------------------------------------------------------------------
 # Middleware

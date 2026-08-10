@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -143,7 +143,6 @@ def get_db() -> TinyDB:
 
 def backup_db() -> Path:
     """Create a timestamped copy of the database file."""
-    from datetime import datetime as dt
     from shutil import copy2
 
     src = Path(settings.database_path)
@@ -153,7 +152,7 @@ def backup_db() -> Path:
     backups_dir = Path("backups")
     backups_dir.mkdir(parents=True, exist_ok=True)
 
-    timestamp = dt.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
     dst = backups_dir / f"db_backup_{timestamp}.json"
     copy2(src, dst)
     return dst

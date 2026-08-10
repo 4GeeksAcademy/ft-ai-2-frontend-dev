@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
+
+from exceptions import password_too_long
 
 
 class UserCreate(BaseModel):
@@ -13,6 +15,14 @@ class UserCreate(BaseModel):
 
     email: EmailStr
     password: str = Field(min_length=8)
+    display_name: str = Field(min_length=1, max_length=100)
+
+    @field_validator("password")
+    @classmethod
+    def password_max_length(cls, v: str) -> str:
+        if len(v) > 128:
+            raise password_too_long()
+        return v
 
 
 class UserLogin(BaseModel):
@@ -25,20 +35,22 @@ class UserLogin(BaseModel):
 class User(BaseModel):
     """Internal User representation stored in TinyDB."""
 
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    id: uuid.UUID = Field(default_factory=uuid.uuid4)
     email: EmailStr
-    hashed_password: str
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    password: str  # Stored as bcrypt hash, never plaintext
+    display_name: str
+    gravatar_url: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class UserPublic(BaseModel):
     """Public-facing User response (never exposes password)."""
 
-    id: str
+    id: uuid.UUID
     email: EmailStr
-    created_at: datetime
-    updated_at: datetime
+    display_name: str
+    gravatar_url: str
 
 
 class UserUpdate(BaseModel):
@@ -46,3 +58,12 @@ class UserUpdate(BaseModel):
 
     email: EmailStr | None = None
     password: str | None = Field(default=None, min_length=8)
+    display_name: str | None = Field(default=None, min_length=1, max_length=100)
+    gravatar_url: str | None = None
+
+    @field_validator("password")
+    @classmethod
+    def password_max_length(cls, v: str | None) -> str | None:
+        if v is not None and len(v) > 128:
+            raise password_too_long()
+        return v
