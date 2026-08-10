@@ -1,5 +1,7 @@
 # Frontend Safety Rules (NextJS / TypeScript)
 
+> Related specs: *Frontend spec planned for future phase* | See [Project Architecture](../specs/project-architecture.md)
+
 ## TypeScript
 
 1. **Strict mode is mandatory.** The `strict: true` flag in `tsconfig.json` must

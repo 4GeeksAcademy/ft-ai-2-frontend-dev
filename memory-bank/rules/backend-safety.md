@@ -1,5 +1,7 @@
 # Backend Safety Rules (Python / FastAPI)
 
+> Related specs: [Backend Spec](../specs/backend.md) | [Project Architecture](../specs/project-architecture.md) | [Security Spec](../specs/security.md)
+
 ## API Safety
 
 1. **Always use Pydantic models for request/response validation.** Never accept

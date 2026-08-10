@@ -1,5 +1,7 @@
 # Database & Data Safety Rules (TinyDB)
 
+> Related specs: [Backend Spec](../specs/backend.md) | [Project Architecture](../specs/project-architecture.md)
+
 ## Write Safety
 
 1. **Validate models before insert.** Every document inserted into TinyDB must

@@ -1,5 +1,7 @@
 # UI / UX Safety Rules
 
+> Related specs: *Frontend spec planned for future phase* | See [Project Architecture](../specs/project-architecture.md)
+
 ## Rendering Safety
 
 1. **Never render unsanitized user content.** Any text submitted by a user that

@@ -1,5 +1,7 @@
 # General Safety Rules
 
+> Related specs: [Security Spec](../specs/security.md) | [Backend Spec](../specs/backend.md)
+
 ## Core Principles
 
 1. **Never commit secrets.** API keys, tokens, passwords, connection strings, and
