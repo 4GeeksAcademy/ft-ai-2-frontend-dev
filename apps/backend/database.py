@@ -118,12 +118,11 @@ def _create_storage(db_path: str) -> TinyDB:
 
     Path(db_path).parent.mkdir(parents=True, exist_ok=True)
 
-    storage = JSONStorage(
-        path=db_path,
-        encoder=_CustomJSONEncoder,
-        decoder=_custom_json_decoder,  # type: ignore[arg-type]
+    return TinyDB(
+        db_path,
+        storage=JSONStorage,
+        cls=_CustomJSONEncoder,
     )
-    return TinyDB(storage)
 
 
 # ---------------------------------------------------------------------------

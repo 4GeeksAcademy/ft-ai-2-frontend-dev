@@ -2,7 +2,16 @@
 
 from __future__ import annotations
 
+import sys
 from contextlib import asynccontextmanager
+from pathlib import Path
+
+# Ensure the backend directory is on sys.path — uvicorn's reloader spawns
+# subprocesses that don't always inherit the working directory, causing
+# ``from config import ...`` and similar relative imports to fail.
+_backend_dir = str(Path(__file__).resolve().parent)
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware

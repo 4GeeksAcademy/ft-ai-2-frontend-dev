@@ -8,7 +8,7 @@
 - **Package manager (Python):** `uv` for python package management
 - **Web framework:** FastAPI
 - **Database:** TinyDB with a custom middleware that bridges Pydantic models and TinyDB documents
-- **Auth libraries:** `python-jose[cryptography]` (JWT) and `passlib[bcrypt]` (password hashing)
+- **Auth libraries:** `python-jose[cryptography]` (JWT) and `libpass[bcrypt]` (password hashing; a maintained fork of `passlib`)
 
 ## Directory Structure
 

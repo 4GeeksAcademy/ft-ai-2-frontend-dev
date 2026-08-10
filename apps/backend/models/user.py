@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from exceptions import password_too_long
 
@@ -46,6 +46,8 @@ class User(BaseModel):
 
 class UserPublic(BaseModel):
     """Public-facing User response (never exposes password)."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     email: EmailStr
