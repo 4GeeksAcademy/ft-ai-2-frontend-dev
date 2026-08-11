@@ -5,8 +5,11 @@
 ## Tech Stack
 
 - **Monorepo tool:** turborepo for project organization
+- **Package manager (JS):** `pnpm` (workspaces via `pnpm-workspace.yaml`)
 - **Package manager (Python):** `uv` for python package management
-- **Web framework:** FastAPI
+- **Web framework (backend):** FastAPI
+- **Web framework (frontend):** Next.js 16 (App Router, TypeScript strict)
+- **Styling:** Tailwind CSS v4
 - **Database:** TinyDB with a custom middleware that bridges Pydantic models and TinyDB documents
 - **Auth libraries:** `python-jose[cryptography]` (JWT) and `libpass[bcrypt]` (password hashing; a maintained fork of `passlib`)
 
@@ -20,12 +23,24 @@ apps/
     models/
       user.py              # Pydantic User model
     routers/
-      auth.py              # POST /register, POST /login
+      auth.py              # POST /auth/register, POST /auth/login
       users.py             # GET /user/{id}, PATCH /user/{id}
     dependencies.py        # FastAPI dependencies (e.g., get_current_user)
     config.py              # Settings loaded from environment variables
     backups/               # Auto-generated timestamped DB backups (gitignored)
-  frontend/                # Placeholder — not yet implemented (see below)
+  frontend/                # Next.js frontend (App Router)
+    src/
+      app/
+        layout.tsx         # Root layout with AuthProvider + Navbar
+        page.tsx           # Homepage — "Hello {user}!" / "Hello world"
+        providers.tsx      # Client-side providers wrapper
+        navbar.tsx         # Navbar (brand, nav links, logout)
+        login/page.tsx     # Login page
+        register/page.tsx  # Registration page
+        user_profile/page.tsx  # Profile view/edit page (requires auth)
+      lib/
+        api.ts             # API client (fetch wrapper, ApiError)
+        auth.tsx           # Auth context (in-memory JWT, login/logout/setUser)
 packages/
   shared/                  # Placeholder for shared types (future)
 ```
@@ -39,6 +54,7 @@ packages/
 | `JWT_ALGORITHM` | `HS256` | Signing algorithm for JWT |
 | `JWT_EXPIRY_MINUTES` | `30` | Token lifetime in minutes |
 | `CORS_ORIGINS` | `["http://localhost:3000"]` | Comma-separated list of allowed CORS origins |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | (frontend) URL of the FastAPI backend |
 
 ## Data Flow
 
@@ -67,6 +83,22 @@ Client Response
 4. Data is read/written to TinyDB via the Pydantic middleware (automatic serialization/deserialization).
 5. The response is serialized back through a Pydantic model before being returned to the client.
 
+## Frontend Auth Flow
+
+```
+Browser (Next.js)  ──►  /auth/register | /auth/login  ──►  FastAPI  ──►  TinyDB
+        │                                                       │
+        └──────────────  JWT stored in React context  ◄─────────┘
+                        (memory only — lost on reload)
+```
+
+1. User registers via `POST /auth/register` (email, password, display_name).
+2. User logs in via `POST /auth/login` (email, password) → receives JWT + user.
+3. JWT is stored in React context **in memory only** (per spec — no localStorage).
+4. The API client (`lib/api.ts`) injects `Authorization: Bearer <token>` for authenticated calls.
+5. Editing the profile (`PATCH /user/{id}`) updates both local state and the auth context via `setUser()`.
+6. On logout, the in-memory token and user are cleared.
+
 ## TinyDB Middleware
 
 The custom middleware allows Pydantic models to be used directly with TinyDB tables. It handles:
@@ -76,4 +108,4 @@ The custom middleware allows Pydantic models to be used directly with TinyDB tab
 
 ## Frontend
 
-Frontend is **out of scope** for this phase of the project. When frontend work begins, a new spec (`specs/frontend.md`) should be created. See [the safety rules](../rules/frontend-safety.md) and [UI safety rules](../rules/ui-safety.md) for the constraints that will apply.
+Frontend is implemented in `apps/frontend/`. See [Minimal Auth Frontend](../specs/minimal-auth-frontend.md) for the canonical spec, and the [Frontend Safety Rules](../rules/frontend-safety.md) and [UI Safety Rules](../rules/ui-safety.md) for the constraints that apply.

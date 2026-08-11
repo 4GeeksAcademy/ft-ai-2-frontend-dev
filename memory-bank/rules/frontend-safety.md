@@ -1,6 +1,6 @@
 # Frontend Safety Rules (NextJS / TypeScript)
 
-> Related specs: *Frontend spec planned for future phase* | See [Project Architecture](../specs/project-architecture.md)
+> Related specs: [Minimal Auth Frontend](../specs/ minimal-auth-frontend.md) | See [Project Architecture](../specs/project-architecture.md)
 
 ## TypeScript
 
@@ -52,6 +52,37 @@
     automatic sizing, lazy loading, and content security. Always specify known
     remote hosts in `next.config.js`.
 
-12. **Form safety.** Use controlled components or form libraries (React Hook Form)
-    with validation schemas. Never render raw user input back to the DOM without
-    encoding it first.
+12. **Form safety.** Use `<form action={handler}>` with `FormData` (React 19
+    pattern) instead of controlled `onSubmit` + `FormEvent`. Use `name` attributes
+    on inputs and `formData.get("name")` to extract values. For edit forms with
+    pre-populated data, use `defaultValue` instead of `value` to keep inputs
+    uncontrolled. Never render raw user input back to the DOM without encoding
+    it first.
+
+## Auth Context
+
+13. **Keep JWT in React state only.** Do not persist tokens to `localStorage`,
+    `sessionStorage`, or cookies unless the spec explicitly requires it. Token
+    loss on refresh is intentional for this demo.
+
+14. **Expose `setUser` for context sync.** When the user profile is edited
+    (display name, avatar), call `setUser(updatedUser)` on the auth context so
+    that all consumers (navbar, homepage) reflect the change immediately without
+    a full page reload.
+
+## Redirect Safety
+
+15. **Use `useEffect` for auth redirects.** Do not call `router.replace()` or
+    `router.push()` during render — React 19 warns about updating the Router
+    component while rendering. Instead, place redirects in a `useEffect` hook
+    that checks the auth state.
+
+## API Client
+
+16. **Use a generic fetch wrapper.** Create a single `apiClient<T>(path, options)`
+    function that prepends the base URL, injects the auth token, and throws
+    structured errors. All API calls should go through this wrapper.
+
+17. **Handle API errors consistently.** The backend returns `{ detail: string }`
+    on errors. The API client should throw an `ApiError` with the `detail`
+    message, and form pages should catch and display it with `role="alert"`.
