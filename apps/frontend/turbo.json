@@ -3,13 +3,13 @@
   "extends": ["//"],
   "tasks": {
     "dev": {
-      "command": "next dev --port 3000"
+      "command": ["next dev --port 3000"]
     },
     "build": {
-      "command": "next build"
+      "command": ["next build"]
     },
     "lint": {
-      "command": "next lint"
+      "command": ["next lint"]
     }
   }
 }

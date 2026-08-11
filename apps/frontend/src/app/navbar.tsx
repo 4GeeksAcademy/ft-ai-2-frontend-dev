@@ -1,0 +1,53 @@
+"use client";
+
+import Link from "next/link";
+import { useAuth } from "@/lib/auth";
+
+export function Navbar() {
+  const { user, isAuthenticated, logout } = useAuth();
+
+  return (
+    <nav className="flex items-center justify-between border-b border-zinc-800 px-6 py-3">
+      <Link
+        href="/"
+        className="text-lg font-semibold tracking-tight text-white hover:text-zinc-300"
+      >
+        Auth Demo
+      </Link>
+
+      <div className="flex items-center gap-4">
+        {isAuthenticated ? (
+          <>
+            <Link
+              href="/user_profile"
+              className="text-sm font-medium text-zinc-400 underline-offset-2 hover:text-white hover:underline"
+            >
+              {user!.display_name}
+            </Link>
+            <button
+              onClick={logout}
+              className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:bg-zinc-800"
+            >
+              Log out
+            </button>
+          </>
+        ) : (
+          <>
+            <Link
+              href="/login"
+              className="text-sm font-medium text-zinc-400 underline-offset-2 hover:text-white hover:underline"
+            >
+              Log in
+            </Link>
+            <Link
+              href="/register"
+              className="rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 transition hover:bg-zinc-200"
+            >
+              Register
+            </Link>
+          </>
+        )}
+      </div>
+    </nav>
+  );
+}

@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Auth Demo — Frontend
+
+A minimal authentication example built with [Next.js](https://nextjs.org) (App Router) and TypeScript.
+
+## Prerequisites
+
+- **Node.js** >= 18
+- **pnpm** >= 9 — the monorepo uses pnpm; install with `npm install -g pnpm`
+- The **backend** must be running on port 8000 (see `apps/backend/README.md`)
+
+## Environment Variables
+
+Create a `.env.local` file in this directory (or copy from `.env.example`):
+
+```bash
+cp .env.example .env.local
+```
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | URL of the FastAPI backend |
 
 ## Getting Started
 
-First, run the development server:
+From the **repository root** (recommended):
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm --filter frontend dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Or from this directory:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open [http://localhost:3000](http://localhost:3000) to see the app.
 
-## Learn More
+### Available scripts
 
-To learn more about Next.js, take a look at the following resources:
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start the development server on port 3000 |
+| `pnpm build` | Create an optimized production build |
+| `pnpm start` | Start the production server |
+| `pnpm lint` | Run ESLint |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+├── app/
+│   ├── globals.css           # Global styles (Tailwind imports)
+│   ├── layout.tsx            # Root layout with AuthProvider
+│   ├── page.tsx              # Homepage — "Hello {user}!" or "Hello world"
+│   ├── providers.tsx         # Client-side providers wrapper
+│   ├── login/page.tsx        # Login page
+│   ├── register/page.tsx     # Registration page
+│   └── user_profile/page.tsx # Profile view/edit page (requires auth)
+└── lib/
+    ├── api.ts                # API client (fetch wrapper)
+    └── auth.tsx              # Auth context (in-memory JWT, login/logout)
+```
 
-## Deploy on Vercel
+## Auth Flow
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. User registers at `/register` — POSTs to `POST /api/register`
+2. User logs in at `/login` — POSTs to `POST /api/login`, receives a JWT
+3. JWT is stored **in memory only** (React context, not localStorage)
+4. Protected routes check auth state; unauthenticated users are redirected to `/login`
+5. On logout, the in-memory token is discarded
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Pages
+
+| Route | Auth Required | Description |
+|-------|---------------|-------------|
+| `/` | No | Homepage — shows greeting based on auth state |
+| `/login` | No | Login form — redirects to `/user_profile` if already logged in |
+| `/register` | No | Registration form — redirects to `/login` on success |
+| `/user_profile` | Yes | View and edit profile — redirects to `/login` if not authenticated |
+
+## Not Included
+
+- Token refresh flow
+- Email verification
+- Password reset
+- OAuth / social login
+- Token persistence across page reloads

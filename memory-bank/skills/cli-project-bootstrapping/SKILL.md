@@ -202,8 +202,3 @@ When asked to bootstrap a new project, follow these steps:
 | `create-*` is interactive-only | Use `expect` or `printf` to pre-fill answers |
 | Directory already exists | Use `--force` flag or scaffold into a temp dir and move |
 | `uv init` creates a script not a project | Add `--package` flag for library projects |
-
-## Related Skills
-
-- [Python Environment Setup](./python-environment-setup.md)
-- [Git Workflow](./git-workflow.md)
