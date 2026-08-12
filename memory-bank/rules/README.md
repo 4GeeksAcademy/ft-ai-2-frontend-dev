@@ -24,6 +24,8 @@ be referenced when making changes in the corresponding domain.
 3. **Fail safely** — never expose internals in error messages.
 4. **Least privilege** — only access what you need, only expose what you must.
 5. **Document decisions** — if it matters for safety, record it in decisions/.
+6. **Humans in the loop** — never build without asking; spec phase and build phase are separate.
+7. **One task at a time** — don't batch-complete work without checkpoints.
 
 ### Directory Structure
 

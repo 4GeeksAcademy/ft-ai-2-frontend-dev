@@ -62,6 +62,40 @@
     `.next/`, `__pycache__/`, `*.pyc`, and similar generated files must be in
     `.gitignore` and never committed.
 
+## Human-in-the-Loop & Scope Discipline
+
+18. **Never build without asking.** AI agents must never write implementation
+    code (files, routes, components, tests, migrations) unless a human has
+    explicitly requested it or approved a plan to do so. "Helping spec out a
+    project" means producing documents, outlines, and plans — not writing
+    application code.
+
+19. **Spec phase and build phase are separate.** When a user asks for a spec,
+    design document, or architecture plan, produce only that. Do not begin
+    implementing the spec unless the user follows up with a request to build.
+    Treat "spec this out" and "build this" as two distinct, gated interactions.
+
+20. **Ask before expanding scope.** If a task naturally leads to additional
+    work (e.g., fixing a bug reveals a related issue, or building a feature
+    suggests a refactor), flag it to the user rather than doing it. Do not
+    expand scope without confirmation.
+
+21. **Explicit go-ahead required.** Before writing any code that affects more
+    than a trivial change, state concisely what you intend to build and wait
+    for the user to say yes. This is especially important when:
+    - Creating new files or directories
+    - Adding new dependencies
+    - Refactoring existing code
+    - Making changes outside the immediate task boundary
+
+22. **Prefer questions over action.** When a request is ambiguous, ask a
+    clarifying question rather than guessing and building. A wrong guess that
+    produces code is worse than a delay while the requirements are clarified.
+
+23. **One task at a time.** Do not proceed to the next task until the current
+    one has been reviewed and approved by the user. Batch-completing multiple
+    tasks without checkpoints deprives the human of the chance to course-correct.
+
 ## Environment Safety
 
 15. **Use `.env.local` for local secrets.** Never commit `.env*` files that
