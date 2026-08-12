@@ -6,35 +6,30 @@ This document describes the authentication and security design for the Auth Demo
 
 ## Authentication Flow
 
-```
-┌──────────┐        ┌──────────────┐        ┌──────────┐
-│  Client  │  ──►   │  POST /login │  ──►   │ Validate │
-│          │  ◄──   │              │  ◄──   │ creds   │
-└──────────┘        └──────────────┘        └──────────┘
-     │                                              │
-     │  Store token                                 ▼
-     │                                       ┌──────────────┐
-     │                                       │ Return JWT   │
-     │                                       │ + user       │
-     │                                       └──────────────┘
-     │
-     │  ┌──────────────┐        ┌──────────────────────┐
-     ├─►│ Protected    │  ──►   │ get_current_user     │
-     │  │ Route        │        │ (extract & validate  │
-     │  └──────────────┘        │  JWT from header)    │
-     │                          └──────────────────────┘
-     │                                       │
-     │                                       ▼
-     │                              ┌──────────────────────┐
-     │                              │ Decode token, verify │
-     │                              │ signature & expiry   │
-     │                              └──────────────────────┘
-     │                                       │
-     │                                       ▼
-     │                              ┌──────────────────────┐
-     │                              │ Return authenticated │
-     │                              │ user or 401          │
-     └──────────────────────────────┘
+```mermaid
+sequenceDiagram
+    participant Client as 🌐 Client
+    participant API as ⚙️ Backend API
+    participant DB as 💾 TinyDB
+
+    Note over Client,API: Phase 1 — Login
+
+    Client->>API: POST /auth/login { email, password }
+    API->>DB: Validate credentials
+    DB-->>API: User found
+    API-->>Client: { access_token, user }
+    Client->>Client: Store token in memory
+
+    Note over Client,API: Phase 2 — Protected request
+
+    Client->>API: Request to protected route (Bearer token)
+    API->>API: get_current_user<br/>(extract & validate JWT from header)
+    API->>API: Decode token, verify signature & expiry
+    alt Token valid
+        API-->>Client: 200 { response data }
+    else Token invalid / expired
+        API-->>Client: 401 Unauthorized
+    end
 ```
 
 ## JWT Token Structure

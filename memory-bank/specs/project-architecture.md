@@ -60,23 +60,15 @@ packages/
 
 ## Data Flow
 
-```
-Client Request
-    │
-    ▼
-FastAPI Router  ──►  Auth Dependency (get_current_user)  ──►  Route Handler
-                                                                    │
-                                                                    ▼
-                                                            Pydantic Validation
-                                                                    │
-                                                                    ▼
-                                                            TinyDB (via Middleware)
-                                                                    │
-                                                                    ▼
-                                                            Pydantic Response
-                                                                    │
-                                                                    ▼
-Client Response
+```mermaid
+flowchart TD
+    A["Client Request"] --> B["FastAPI Router"]
+    B --> C["Auth Dependency<br/>(get_current_user)"]
+    C --> D["Route Handler"]
+    D --> E["Pydantic Validation"]
+    E --> F["TinyDB (via Middleware)"]
+    F --> G["Pydantic Response"]
+    G --> H["Client Response"]
 ```
 
 1. Request arrives at a FastAPI router.
@@ -87,11 +79,17 @@ Client Response
 
 ## Frontend Auth Flow
 
-```
-Browser (Next.js)  ──►  /auth/register | /auth/login  ──►  FastAPI  ──►  TinyDB
-        │                                                       │
-        └──────────────  JWT stored in React context  ◄─────────┘
-                        (memory only — lost on reload)
+```mermaid
+sequenceDiagram
+    participant Browser as 🌐 Browser (Next.js)
+    participant API as ⚙️ FastAPI
+    participant DB as 💾 TinyDB
+
+    Browser->>API: POST /auth/register | /auth/login
+    API->>DB: Read / write user record
+    DB-->>API: User record
+    API-->>Browser: JWT + user
+    Browser->>Browser: Store JWT in React context<br/>(memory only — lost on reload)
 ```
 
 1. User registers via `POST /auth/register` (email, password, display_name).
