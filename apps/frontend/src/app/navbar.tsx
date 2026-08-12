@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
+import { Button } from "@/components/ui/Button";
 
 export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -24,12 +25,9 @@ export function Navbar() {
             >
               {user!.display_name}
             </Link>
-            <button
-              onClick={logout}
-              className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:bg-zinc-800"
-            >
+            <Button variant="secondary" onClick={logout}>
               Log out
-            </button>
+            </Button>
           </>
         ) : (
           <>

@@ -12,6 +12,7 @@ design decisions for the first working version.
 | [backend.md](backend.md) | API routes, request/response schemas, models, token behavior, conventions | ✅ Implemented |
 | [security.md](security.md) | Authentication flow, JWT structure, password policy, threat mitigations, known gaps | ✅ Implemented |
 | [password-reset.md](password-reset.md) | Password reset flow, reset token, backend routes, frontend routes, security considerations | ✅ Implemented |
+| [frontend-component-refactor.md](frontend-component-refactor.md) | Frontend component hierarchy, repeated patterns, migration plan for UI primitives | ✅ Implemented |
 
 ### Implementation Notes
 
