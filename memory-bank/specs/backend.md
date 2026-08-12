@@ -63,6 +63,30 @@ Authenticates a user with their email and password. Returns a signed JWT and the
 | Success (200) | `{ "access_token": str, "token_type": "bearer", "user": { ... } }` |
 | Errors | 401 (invalid credentials), 422 (validation) |
 
+#### `POST /request-reset-link`
+
+Requests a password reset link. Always returns 200 regardless of whether the email exists (prevents email enumeration). When the email exists, a short-lived reset JWT is generated and the reset link is printed to the backend console as a **simulated email** (no real email infrastructure in the MVP).
+
+| Detail | Value |
+|--------|-------|
+| Auth required | No |
+| Request body | `{ "email": str }` |
+| Success (200) | `{ "detail": "If an account with that email exists, a reset link has been sent." }` |
+| Errors | 422 (validation) |
+| Notes | Always 200 — no 404 for unknown emails |
+
+#### `POST /reset-password`
+
+Resets a user's password using a short-lived reset JWT. The token must carry `purpose: "password_reset"` and a valid `sub` (user UUID); otherwise 401. The new password is bcrypt-hashed before storage.
+
+| Detail | Value |
+|--------|-------|
+| Auth required | No |
+| Request body | `{ "token": str, "new_password": str }` |
+| Success (200) | `{ "detail": "Password has been reset successfully." }` |
+| Errors | 401 (invalid/expired token, wrong purpose, unknown user), 422 (validation, e.g. password < 8 chars) |
+| Notes | Token is sent in the request body, NOT as a Bearer header — it is an unauthenticated endpoint |
+
 ### User Routes
 
 #### `GET /user/{id}`
@@ -103,6 +127,17 @@ class User(BaseModel):
     gravatar_url: str
 ```
 
+### Request Models (Password Reset)
+
+```python
+class RequestResetLinkRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str      # Field(min_length=8), 128-char max via validator
+```
+
 ### Password Policy
 
 | Rule | Value |
@@ -116,13 +151,25 @@ class User(BaseModel):
 
 ## Token Behavior
 
+### Auth Token
+
 | Property | Value |
 |----------|-------|
-| Algorithm | RS256 or HS256 (via `python-jose[cryptography]`) |
-| Token type | Bearer |
+| Algorithm | HS256 (via `python-jose[cryptography]`) |
+| Token type | Bearer (sent in `Authorization` header) |
 | Expiry | 30 minutes (configurable via `JWT_EXPIRY_MINUTES` env var) |
 | Refresh flow | Not included in MVP |
 | Claims | `sub` (user UUID), `exp` (expiration), `iat` (issued at) |
+
+### Password Reset Token
+
+| Property | Value |
+|----------|-------|
+| Algorithm | HS256 (same `JWT_SECRET` as auth token) |
+| Token type | Sent in request body (NOT as Bearer header) |
+| Expiry | 15 minutes (configurable via `JWT_RESET_TOKEN_EXPIRY_MINUTES` env var) |
+| Claims | `sub` (user UUID), `purpose` ("password_reset"), `exp`, `iat` |
+| Validation | Purpose claim is checked — auth tokens (no `purpose`) are rejected, as are tokens with `purpose !== "password_reset"` |
 
 ---
 

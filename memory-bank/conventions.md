@@ -24,10 +24,16 @@
   `useAuth()` hook. Use `setUser()` to sync auth context after profile edits.
 - **API client:** Use `apiClient<T>(path, { token, method, body })` from
   `lib/api.ts`. It prepends `NEXT_PUBLIC_API_URL`, injects `Authorization`
-  header, and throws `ApiError` on non-2xx responses.
+  header, and throws `ApiError` on non-2xx responses. For unauthenticated
+  endpoints (like password reset), omit the `token` option.
 - **Redirects:** Use `useEffect` for redirecting authenticated users away from
   login/register pages. Do NOT call `router.replace()` during render — React 19
   warns about this.
+- **`useSearchParams()` Suspense boundary:** Any page that calls `useSearchParams()`
+  must wrap the component using it in a `<Suspense>` boundary. Pattern: extract
+  the hook-using component into an inner function/component, export a wrapper
+  default that renders `<Suspense fallback={null}><InnerComponent /></Suspense>`.
+  Both `/login` and `/reset-password` follow this pattern.
 - **Dark theme:** Single dark theme only (no light/dark toggle). Use `bg-zinc-950`
   for page background, `bg-zinc-900` for cards, `bg-zinc-800` for inputs,
   `text-zinc-100` for primary text, `text-zinc-300`/`text-zinc-400` for
@@ -36,3 +42,7 @@
   browser APIs are needed. Default to server components.
 - **Images:** Use `<Image>` from `next/image` with `remotePatterns` configured
   in `next.config.ts`.
+- **Password reset pattern:** Two-state page at `/reset-password`:
+  - No `?token=` param: email form → calls `POST /auth/request-reset-link` → shows "Check your email" message
+  - `?token=` param present: password form with confirm → calls `POST /auth/reset-password` → redirects to `/login?reset=success`
+  - Login page shows success banner via `?reset=success` query param + "Forgot your password?" link below password field

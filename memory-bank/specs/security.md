@@ -39,7 +39,7 @@ This document describes the authentication and security design for the Auth Demo
 
 ## JWT Token Structure
 
-### Claims
+### Auth Token Claims
 
 | Claim | Type | Description |
 |-------|------|-------------|
@@ -47,11 +47,31 @@ This document describes the authentication and security design for the Auth Demo
 | `exp` | `int` (Unix timestamp) | Token expiration time |
 | `iat` | `int` (Unix timestamp) | Token issued-at time |
 
-### Example Decoded Payload
+### Example Decoded Auth Token Payload
 
 ```json
 {
   "sub": "550e8400-e29b-41d4-a716-446655440000",
+  "exp": 1712345678,
+  "iat": 1712343878
+}
+```
+
+### Password Reset Token Claims
+
+| Claim | Type | Description |
+|-------|------|-------------|
+| `sub` | `str` (UUID) | The user's unique identifier |
+| `purpose` | `"password_reset"` | Fixed string — validates this is a reset token, not an auth token |
+| `exp` | `int` (Unix timestamp) | Token expiration time (15 min) |
+| `iat` | `int` (Unix timestamp) | Token issued-at time |
+
+### Example Decoded Reset Token Payload
+
+```json
+{
+  "sub": "550e8400-e29b-41d4-a716-446655440000",
+  "purpose": "password_reset",
   "exp": 1712345678,
   "iat": 1712343878
 }
@@ -82,6 +102,8 @@ This document describes the authentication and security design for the Auth Demo
 |----------|---------------|-------|
 | `POST /register` | No | Input validated via Pydantic; duplicate email checked |
 | `POST /login` | No | Credentials verified; returns JWT on success |
+| `POST /request-reset-link` | No | Always 200 — prevents email enumeration |
+| `POST /reset-password` | No | Token in body; validates signature, expiry, and `purpose` claim |
 | `GET /health` | No | Returns only `{ "status": "ok" }` — no sensitive data |
 | `GET /user/{id}` | No | Returns public profile only (no password hash) |
 | `PATCH /user/{id}` | Yes | Authenticated user may only edit their own record |
@@ -91,7 +113,7 @@ This document describes the authentication and security design for the Auth Demo
 
 | Threat | Mitigation |
 |--------|-----------|
-| Token theft / replay | Short expiry (30 min); HTTPS required in production |
+| Token theft / replay | Short expiry (30 min for auth, 15 min for reset); HTTPS required in production |
 | Brute force login | Not implemented in MVP — password policy mitigates partially |
 | SQL/NoSQL injection | TinyDB `Query()` objects prevent injection; no raw eval |
 | Path traversal | All file operations validate resolved path is within allowed directory |
@@ -99,6 +121,10 @@ This document describes the authentication and security design for the Auth Demo
 | Expired token reuse | `exp` claim checked on every request; 401 returned |
 | User impersonation | `PATCH /user/{id}` enforces ownership check against token `sub` |
 | Stack trace leakage | Global exception handler returns generic 500; full trace logged server-side |
+| Email enumeration | `POST /auth/request-reset-link` always returns 200 |
+| Auth token used as reset token | `purpose` claim is validated on reset — auth tokens lack this claim and are rejected |
+| Reset token used as auth token | Reset tokens carry `purpose: "password_reset"` and `get_current_user` does not accept them |
+| User deleted between token issuance and use | `POST /auth/reset-password` validates the user exists; if deleted, returns 401 |
 
 ## Known Gaps (Post-MVP)
 
@@ -106,5 +132,5 @@ This document describes the authentication and security design for the Auth Demo
 - **Rate limiting:** No rate limiting on login or registration endpoints.
 - **Account lockout:** No lockout after repeated failed login attempts.
 - **Email verification:** No email confirmation step during registration.
-- **Password reset:** Covered in the [password reset spec](password-reset.md).
+- **Password reset:** Implemented — see the [password reset spec](password-reset.md) for details.
 - **HTTPS enforcement:** Not applicable in local development; required in production.
