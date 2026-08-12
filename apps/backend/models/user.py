@@ -55,6 +55,24 @@ class UserPublic(BaseModel):
     gravatar_url: str
 
 
+class RequestResetLinkRequest(BaseModel):
+    """Request body for POST /auth/request-reset-link."""
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    """Request body for POST /auth/reset-password."""
+    token: str
+    new_password: str = Field(min_length=8)
+
+    @field_validator("new_password")
+    @classmethod
+    def password_max_length(cls, v: str) -> str:
+        if len(v) > 128:
+            raise password_too_long()
+        return v
+
+
 class UserUpdate(BaseModel):
     """Request body for updating a user (all fields optional)."""
 

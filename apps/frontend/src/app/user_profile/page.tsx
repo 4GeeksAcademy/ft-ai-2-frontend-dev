@@ -19,6 +19,7 @@ export default function UserProfilePage() {
 
   // Edit mode state
   const [editing, setEditing] = useState(false);
+  
   const [profileUser, setProfileUser] = useState<User | null>(user);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);

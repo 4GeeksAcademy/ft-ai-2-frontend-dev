@@ -106,5 +106,5 @@ This document describes the authentication and security design for the Auth Demo
 - **Rate limiting:** No rate limiting on login or registration endpoints.
 - **Account lockout:** No lockout after repeated failed login attempts.
 - **Email verification:** No email confirmation step during registration.
-- **Password reset:** No "forgot password" flow.
+- **Password reset:** Covered in the [password reset spec](password-reset.md).
 - **HTTPS enforcement:** Not applicable in local development; required in production.

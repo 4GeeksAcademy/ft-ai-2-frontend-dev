@@ -11,6 +11,7 @@ design decisions for the first working version.
 | [project-architecture.md](project-architecture.md) | Monorepo layout, tech stack, directory structure, data flow, environment variables | ✅ Implemented |
 | [backend.md](backend.md) | API routes, request/response schemas, models, token behavior, conventions | ✅ Implemented |
 | [security.md](security.md) | Authentication flow, JWT structure, password policy, threat mitigations, known gaps | ✅ Implemented |
+| [password-reset.md](password-reset.md) | Password reset flow, reset token, backend routes, frontend routes, security considerations | ✅ Spec complete |
 
 ### Implementation Notes
 

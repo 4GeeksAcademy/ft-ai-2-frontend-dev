@@ -23,7 +23,7 @@ apps/
     models/
       user.py              # Pydantic User model
     routers/
-      auth.py              # POST /auth/register, POST /auth/login
+      auth.py              # POST /auth/register, POST /auth/login, POST /auth/request-reset-link, POST /auth/reset-password
       users.py             # GET /user/{id}, PATCH /user/{id}
     dependencies.py        # FastAPI dependencies (e.g., get_current_user)
     config.py              # Settings loaded from environment variables
@@ -35,8 +35,9 @@ apps/
         page.tsx           # Homepage — "Hello {user}!" / "Hello world"
         providers.tsx      # Client-side providers wrapper
         navbar.tsx         # Navbar (brand, nav links, logout)
-        login/page.tsx     # Login page
+        login/page.tsx     # Login page (with "Forgot your password?" link)
         register/page.tsx  # Registration page
+        reset-password/page.tsx  # Password reset (email form + token form)
         user_profile/page.tsx  # Profile view/edit page (requires auth)
       lib/
         api.ts             # API client (fetch wrapper, ApiError)
@@ -53,6 +54,7 @@ packages/
 | `JWT_SECRET` | *(required)* | Secret key used to sign JWT tokens |
 | `JWT_ALGORITHM` | `HS256` | Signing algorithm for JWT |
 | `JWT_EXPIRY_MINUTES` | `30` | Token lifetime in minutes |
+| `JWT_RESET_TOKEN_EXPIRY_MINUTES` | `15` | Lifetime of password reset tokens in minutes |
 | `CORS_ORIGINS` | `["http://localhost:3000"]` | Comma-separated list of allowed CORS origins |
 | `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | (frontend) URL of the FastAPI backend |
 
