@@ -1,24 +1,25 @@
-# MVP Specs
+# Testing Demo — Specs
 
-This directory contains the specifications for the **Auth Demo**. Each file
-covers a specific aspect of the application. These specs define the scope and
-design decisions for the first working version.
+This directory contains the specifications for the **Testing Demo**. Each file
+covers a specific demo application. These specs define the scope, design, test
+patterns, and implementation checklist for each example.
 
 ## File Index
 
 | File | Covers | Status |
 |------|--------|--------|
-| [project-architecture.md](project-architecture.md) | Monorepo layout, tech stack, directory structure, data flow, environment variables | ✅ Implemented |
-| [backend.md](backend.md) | API routes, request/response schemas, models, token behavior, conventions | ✅ Implemented |
-| [security.md](security.md) | Authentication flow, JWT structure, password policy, threat mitigations, known gaps | ✅ Implemented |
-| [password-reset.md](password-reset.md) | Password reset flow, reset token, backend routes, frontend routes, security considerations | ✅ Implemented |
-| [frontend-component-refactor.md](frontend-component-refactor.md) | Frontend component hierarchy, repeated patterns, migration plan for UI primitives | ✅ Implemented |
+| [fastapi-testing-demo.md](./fastapi-testing-demo.md) | FastAPI unit testing demo — business logic, `unittest`, mocking | Draft |
+| [nextjs-testing-demo.md](./nextjs-testing-demo.md) | NextJS testing demo — Vitest component tests & Playwright E2E | Draft |
+
+### Reading Order
+
+1. **[fastapi-testing-demo.md](./fastapi-testing-demo.md)** — Start here.
+   Pure Python, no server, fastest feedback loop. Builds testing fundamentals
+   (assertions, fixtures, mocking, edge cases) without browser complexity.
+
+2. **[nextjs-testing-demo.md](./nextjs-testing-demo.md)** — Move here second.
+   Applies the same testing concepts in a frontend context, then adds E2E
+   testing with Playwright at the top of the testing pyramid.
 
 ### Implementation Notes
 
-- **Monorepo**: Turborepo + pnpm scaffolded; backend lives under `apps/backend/`
-- **Backend**: FastAPI with TinyDB, CORS, lifespan handlers, and all auth routes deployed
-- **Auth**: JWT (HS256) via `python-jose`, password hashing via `libpass[bcrypt]` (replaces the unmaintained `passlib`)
-- **Password Reset**: Two new endpoints (`POST /auth/request-reset-link`, `POST /auth/reset-password`), short-lived JWT with `purpose: "password_reset"` claim, simulated email on console, email enumeration prevention (always returns 200)
-- **Frontend**: Next.js 16 App Router with 5 pages (including `/reset-password`), `useSearchParams()` wrapped in `<Suspense>`, dark theme only
-- **Testing**: Verified manually — register, login, request-reset-link, reset-password, user lookup, and profile update all return correct responses; edge cases (invalid token, wrong purpose, short password, unknown email) all handled correctly
