@@ -19,7 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from config import settings
 from database import backup_db, get_db
 from exceptions import AppException, app_exception_handler, generic_exception_handler
-from routers import auth, users
+from routers import auth, profiles, users
 
 
 @asynccontextmanager
@@ -65,7 +65,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(users.router)
-
+app.include_router(profiles.router)
 
 @app.get("/health")
 def health_check() -> dict:

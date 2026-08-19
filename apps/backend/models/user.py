@@ -5,10 +5,15 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from exceptions import password_too_long
+from enum import Enum
 
+class UserRole(str, Enum):
+    admin = "admin"
+    manager = "manager"
+    user = "user"
 
 class UserCreate(BaseModel):
     """Request body for user registration."""
@@ -16,6 +21,9 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8)
     display_name: str = Field(min_length=1, max_length=100)
+    name: str | None = None
+    phone: str | None = None
+    address: str | None = None
 
     @field_validator("password")
     @classmethod
@@ -37,9 +45,12 @@ class User(BaseModel):
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
     email: EmailStr
-    password: str  # Stored as bcrypt hash, never plaintext
-    display_name: str
+    hashed_password: str = Field(
+        validation_alias=AliasChoices("hashed_password", "password")
+    )
     gravatar_url: str
+    is_active: bool = True
+    role: UserRole = UserRole.user
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
@@ -51,8 +62,10 @@ class UserPublic(BaseModel):
 
     id: uuid.UUID
     email: EmailStr
-    display_name: str
+    display_name: str | None = None
     gravatar_url: str
+    is_active: bool
+    role: UserRole
 
 
 class RequestResetLinkRequest(BaseModel):
@@ -80,6 +93,7 @@ class UserUpdate(BaseModel):
     password: str | None = Field(default=None, min_length=8)
     display_name: str | None = Field(default=None, min_length=1, max_length=100)
     gravatar_url: str | None = None
+    role: UserRole | None = None
 
     @field_validator("password")
     @classmethod

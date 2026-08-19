@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from passlib.context import CryptContext
 
 from database import get_db
@@ -16,11 +16,18 @@ from exceptions import (
     password_too_long,
     user_not_found,
 )
-from models.user import User, UserPublic, UserUpdate
+from routers.auth import register as register_user
+from models.user import User, UserCreate, UserPublic, UserRole, UserUpdate
 
-router = APIRouter(prefix="/user", tags=["users"])
+router = APIRouter(prefix="/users", tags=["users"])
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+@router.post("", status_code=status.HTTP_201_CREATED)
+def create_user(body: UserCreate) -> dict:
+    """Create a new user by reusing the existing registration behavior."""
+    return register_user(body)
 
 
 def _parse_user_id(raw: str) -> uuid.UUID:
@@ -42,10 +49,31 @@ def _find_user_by_uuid(users_table, user_uuid: uuid.UUID) -> tuple[User, int]:
     user = User.model_validate(doc)
     return user, doc.doc_id
 
+@router.get("", response_model=list[UserPublic])
+def list_users(
+    _current_user: UserPublic = Depends(get_current_user),
+) -> list[UserPublic]:
+    """Return all users. Authentication required."""
+    db = get_db()
+    users_table = db.table("users")
+
+    return [
+        UserPublic.model_validate(
+            {
+                **user,
+                "is_active": user.get("is_active", True),
+                "role": user.get("role", UserRole.user),
+            }
+        )
+        for user in users_table.all()
+    ]
 
 @router.get("/{user_id}", response_model=UserPublic)
-def get_user(user_id: str) -> UserPublic:
-    """Return a user's public profile by UUID. No auth required."""
+def get_user(
+    user_id: str,
+    _current_user: UserPublic = Depends(get_current_user),
+) -> UserPublic:
+    """Return a user's public profile by UUID. Authentication required."""
     db = get_db()
     users_table = db.table("users")
 
@@ -55,7 +83,30 @@ def get_user(user_id: str) -> UserPublic:
     return UserPublic.model_validate(user)
 
 
-@router.patch("/{user_id}", response_model=UserPublic)
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(
+    user_id: str,
+    current_user: UserPublic = Depends(get_current_user),
+) -> None:
+    """Delete a user account. Admins may delete any user; users may delete themselves."""
+    db = get_db()
+    users_table = db.table("users")
+    profiles_table = db.table("profiles")
+
+    user_uuid = _parse_user_id(user_id)
+
+    is_admin = current_user.role == UserRole.admin
+    if current_user.id != user_uuid and not is_admin:
+        raise forbidden()
+
+    _user, doc_id = _find_user_by_uuid(users_table, user_uuid)
+    users_table.remove(doc_ids=[doc_id])
+    profiles_table.remove(lambda doc: doc.get("user_id") == str(user_uuid))
+
+    return None
+
+
+@router.put("/{user_id}", response_model=UserPublic)
 def update_user(
     user_id: str,
     body: UserUpdate,
@@ -67,12 +118,18 @@ def update_user(
 
     user_uuid = _parse_user_id(user_id)
 
-    # Only allow users to update their own profile
-    if current_user.id != user_uuid:
-        raise forbidden()
+    # Users may update themselves; admins may update any user.
+    is_admin = current_user.role == UserRole.admin
+
+    if current_user.id != user_uuid and not is_admin:
+      raise forbidden()
 
     user, doc_id = _find_user_by_uuid(users_table, user_uuid)
     update_data = body.model_dump(exclude_unset=True)
+    if "role" in update_data:
+      if not is_admin:
+        raise forbidden()
+      user.role = update_data["role"]
 
     if "email" in update_data:
         user.email = update_data["email"]
@@ -80,9 +137,7 @@ def update_user(
     if "password" in update_data:
         if len(update_data["password"]) > 128:
             raise password_too_long()
-        user.password = pwd_context.hash(update_data["password"])
-    if "display_name" in update_data:
-        user.display_name = update_data["display_name"]
+        user.hashed_password = pwd_context.hash(update_data["password"])
     if "gravatar_url" in update_data:
         user.gravatar_url = update_data["gravatar_url"]
 

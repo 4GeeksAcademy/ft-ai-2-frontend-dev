@@ -5,26 +5,24 @@ from __future__ import annotations
 import uuid
 
 from fastapi import Depends
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 
 from config import settings
 from database import get_db
-from exceptions import token_invalid, token_missing_sub, user_not_found
+from exceptions import token_invalid, token_missing_sub
 from models.user import User, UserPublic
 
-security = HTTPBearer()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    token: str = Depends(oauth2_scheme),
 ) -> UserPublic:
     """Extract and validate the JWT from the Authorization header.
 
     Returns the public user profile of the authenticated user.
     """
-    token = credentials.credentials
-
     try:
         payload = jwt.decode(
             token, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
@@ -41,7 +39,7 @@ def get_current_user(
 
     matching = users_table.search(lambda doc: doc.get("id") == str(user_id))
     if not matching:
-        raise user_not_found()
+        raise token_invalid()
 
     user = User.model_validate(matching[0])
     return UserPublic.model_validate(user)
