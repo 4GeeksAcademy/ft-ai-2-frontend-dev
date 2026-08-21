@@ -9,3 +9,4 @@ design decisions for the first working version.
 | File | Covers | Status |
 |------|--------|--------|
 |[data-model.md](data-model.md)|The data model for this project|DRAFT|
+|[mvp-scope.md](mvp-scope.md)|Full MVP scope: routes, relationships, build phases|DRAFT|
