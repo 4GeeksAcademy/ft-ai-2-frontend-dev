@@ -1,0 +1,9 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "dev": {
+      "command": "uv run uvicorn main:app --reload --port 8000"
+    }
+  }
+}
