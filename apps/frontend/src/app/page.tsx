@@ -6,17 +6,18 @@ import { Button } from "@/components/ui/Button";
 
 export default function HomePage() {
   const { user, isAuthenticated, logout } = useAuth();
+  const displayName = user?.display_name ?? user?.email;
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-8">
       <h1 className="text-4xl font-bold tracking-tight text-white">
-        Hello {isAuthenticated ? user!.display_name : "world"}!
+        Hello {isAuthenticated ? displayName : "world"}!
       </h1>
 
       {isAuthenticated ? (
         <div className="flex items-center gap-4">
           <Link
-            href="/user_profile"
+            href="/account/profile"
             className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-zinc-900 transition hover:bg-zinc-200"
           >
             View Profile

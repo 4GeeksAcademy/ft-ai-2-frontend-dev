@@ -1,10 +1,30 @@
 "use client";
 
-export interface User {
+export interface UserPublic {
   id: string;
   email: string;
-  display_name: string;
+  display_name: string | null;
   gravatar_url: string;
+  is_active: boolean;
+  role: "admin" | "manager" | "user";
+}
+
+export type User = UserPublic;
+
+export interface ProfilePublic {
+  id: string;
+  user_id: string;
+  name: string | null;
+  phone: string | null;
+  address: string | null;
+}
+
+export interface AuthMeResponse {
+  id: string;
+  email: string;
+  role: "admin" | "manager" | "user";
+  is_active: boolean;
+  profile: ProfilePublic;
 }
 
 export interface LoginResponse {
@@ -16,6 +36,15 @@ export interface LoginResponse {
 export interface ApiError {
   detail: string;
   error_code: string;
+  status?: number;
+}
+
+type UnauthorizedHandler = () => void;
+
+let unauthorizedHandler: UnauthorizedHandler | null = null;
+
+export function setUnauthorizedHandler(handler: UnauthorizedHandler | null): void {
+  unauthorizedHandler = handler;
 }
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -57,6 +86,13 @@ export async function apiClient<T>(
         error_code: "UNKNOWN",
       };
     }
+
+    errorBody.status = response.status;
+
+    if (response.status === 401 && (Boolean(token) || headers.has("Authorization"))) {
+      unauthorizedHandler?.();
+    }
+
     throw errorBody;
   }
 

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 
 export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
+  const displayName = user?.display_name ?? user?.email;
 
   return (
     <nav className="flex items-center justify-between border-b border-zinc-800 px-6 py-3">
@@ -20,10 +21,10 @@ export function Navbar() {
         {isAuthenticated ? (
           <>
             <Link
-              href="/user_profile"
+              href="/account/profile"
               className="text-sm font-medium text-zinc-400 underline-offset-2 hover:text-white hover:underline"
             >
-              {user!.display_name}
+              {displayName}
             </Link>
             <Button variant="secondary" onClick={logout}>
               Log out

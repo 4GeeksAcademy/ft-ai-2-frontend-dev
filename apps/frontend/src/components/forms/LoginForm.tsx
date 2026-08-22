@@ -13,7 +13,7 @@ import { AuthLink } from "@/components/layout/AuthLink";
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, isLoading } = useAuth();
   const resetSuccess = searchParams.get("reset") === "success";
 
   const [error, setError] = useState<string | null>(null);
@@ -21,12 +21,12 @@ export function LoginForm() {
 
   // Already logged in — redirect to profile
   useEffect(() => {
-    if (isAuthenticated) {
-      router.replace("/user_profile");
+    if (!isLoading && isAuthenticated) {
+      router.replace("/account/profile");
     }
-  }, [isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, router]);
 
-  if (isAuthenticated) {
+  if (isLoading || isAuthenticated) {
     return null;
   }
 
@@ -39,7 +39,7 @@ export function LoginForm() {
         formData.get("email") as string,
         formData.get("password") as string,
       );
-      router.replace("/user_profile");
+      router.replace("/account/profile");
     } catch (err: unknown) {
       const apiErr = err as ApiError;
       setError(apiErr.detail ?? "An unexpected error occurred.");

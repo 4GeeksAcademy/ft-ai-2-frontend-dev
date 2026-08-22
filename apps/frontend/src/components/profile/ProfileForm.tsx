@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
-import { apiClient, type ApiError, type User } from "@/lib/api";
+import { apiClient, type ApiError, type ProfilePublic } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
 import { PageCenter } from "@/components/layout/PageCenter";
 import { Avatar } from "@/components/ui/Avatar";
@@ -12,32 +11,30 @@ import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 
 export function ProfileForm() {
-  const router = useRouter();
-  const { user, token, isAuthenticated, logout, setUser } = useAuth();
-
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace("/login");
-    }
-  }, [isAuthenticated, router]);
+  const { user, token, isLoading, isAuthenticated, logout } = useAuth();
+  const displayName = user?.display_name ?? user?.email;
 
   // Edit mode state
   const [editing, setEditing] = useState(false);
 
-  const [profileUser, setProfileUser] = useState<User | null>(user);
+  const [profile, setProfile] = useState<ProfilePublic | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Fetch full profile when authenticated
   useEffect(() => {
-    if (!isAuthenticated || !user || !token) return;
+    if (!isAuthenticated || !token) {
+      return;
+    }
 
-    apiClient<User>(`/user/${user.id}`, { token }).then(setProfileUser).catch(() => {
-      // If the fetch fails, we still have the auth context user
-    });
-  }, [isAuthenticated, user, token]);
+    apiClient<ProfilePublic>("/profiles/me", { token })
+      .then(setProfile)
+      .catch((err: unknown) => {
+        const apiErr = err as ApiError;
+        setError(apiErr.detail ?? "Failed to load profile.");
+      });
+  }, [isAuthenticated, token]);
 
   function startEditing() {
     setError(null);
@@ -52,24 +49,26 @@ export function ProfileForm() {
   }
 
   async function handleSave(formData: FormData) {
-    if (!user || !token) return;
+    if (!token) {
+      return;
+    }
 
     setError(null);
     setSuccess(null);
     setSaving(true);
 
     try {
-      const updated = await apiClient<User>(`/user/${user.id}`, {
-        method: "PATCH",
+      const updated = await apiClient<ProfilePublic>("/profiles/me", {
+        method: "PUT",
         token,
         body: JSON.stringify({
-          display_name: formData.get("displayName"),
-          gravatar_url: formData.get("gravatarUrl"),
+          name: formData.get("name"),
+          phone: formData.get("phone"),
+          address: formData.get("address"),
         }),
       });
 
-      setProfileUser(updated);
-      setUser(updated);
+      setProfile(updated);
       setEditing(false);
       setSuccess("Profile updated successfully.");
     } catch (err: unknown) {
@@ -81,7 +80,11 @@ export function ProfileForm() {
   }
 
   // Guard: render nothing during redirect
-  if (!isAuthenticated || !user || !profileUser) {
+  if (isLoading || !isAuthenticated || !user) {
+    return null;
+  }
+
+  if (!profile) {
     return null;
   }
 
@@ -91,12 +94,12 @@ export function ProfileForm() {
         {/* Avatar */}
         <div className="mb-6 flex flex-col items-center gap-4">
           <Avatar
-            src={profileUser.gravatar_url}
-            alt={`${profileUser.display_name}'s avatar`}
+            src={user.gravatar_url}
+            alt={`${displayName}'s avatar`}
             size={80}
           />
           <h1 className="text-2xl font-bold tracking-tight text-white">
-            {profileUser.display_name}
+            {displayName}
           </h1>
         </div>
 
@@ -118,20 +121,27 @@ export function ProfileForm() {
           /* ---- Edit mode ---- */
           <form action={handleSave} className="flex flex-col gap-4">
             <Input
-              id="edit-displayName"
-              name="displayName"
-              label="Display name"
+              id="edit-name"
+              name="name"
+              label="Name"
               type="text"
-              required
-              defaultValue={profileUser.display_name}
+              defaultValue={profile.name ?? ""}
             />
 
             <Input
-              id="edit-gravatar"
-              name="gravatarUrl"
-              label="Gravatar URL"
-              type="url"
-              defaultValue={profileUser.gravatar_url}
+              id="edit-phone"
+              name="phone"
+              label="Phone"
+              type="text"
+              defaultValue={profile.phone ?? ""}
+            />
+
+            <Input
+              id="edit-address"
+              name="address"
+              label="Address"
+              type="text"
+              defaultValue={profile.address ?? ""}
             />
 
             <div className="flex gap-3">
@@ -161,7 +171,28 @@ export function ProfileForm() {
               <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">
                 Email
               </p>
-              <p className="mt-0.5 text-sm text-zinc-300">{profileUser.email}</p>
+              <p className="mt-0.5 text-sm text-zinc-300">{user.email}</p>
+            </div>
+
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">
+                Name
+              </p>
+              <p className="mt-0.5 text-sm text-zinc-300">{profile.name ?? "-"}</p>
+            </div>
+
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">
+                Phone
+              </p>
+              <p className="mt-0.5 text-sm text-zinc-300">{profile.phone ?? "-"}</p>
+            </div>
+
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">
+                Address
+              </p>
+              <p className="mt-0.5 text-sm text-zinc-300">{profile.address ?? "-"}</p>
             </div>
 
             <Button onClick={startEditing}>Edit Profile</Button>

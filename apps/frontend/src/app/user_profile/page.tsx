@@ -1,5 +1,5 @@
-import { ProfileForm } from "@/components/profile/ProfileForm";
+import { redirect } from "next/navigation";
 
 export default function UserProfilePage() {
-  return <ProfileForm />;
+  redirect("/account/profile");
 }

@@ -12,19 +12,19 @@ import { AuthLink } from "@/components/layout/AuthLink";
 
 export function RegisterForm() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { login, isAuthenticated, isLoading } = useAuth();
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   // Already logged in — redirect to profile
   useEffect(() => {
-    if (isAuthenticated) {
-      router.replace("/user_profile");
+    if (!isLoading && isAuthenticated) {
+      router.replace("/account/profile");
     }
-  }, [isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, router]);
 
-  if (isAuthenticated) {
+  if (isLoading || isAuthenticated) {
     return null;
   }
 
@@ -42,8 +42,11 @@ export function RegisterForm() {
         }),
       });
 
-      // Registration succeeded — redirect to login
-      router.replace("/login");
+      await login(
+        formData.get("email") as string,
+        formData.get("password") as string,
+      );
+      router.replace("/account/profile");
     } catch (err: unknown) {
       const apiErr = err as ApiError;
       setError(apiErr.detail ?? "An unexpected error occurred.");
