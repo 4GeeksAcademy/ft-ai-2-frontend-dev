@@ -1,0 +1,42 @@
+services:
+  backend:
+    image: "python:3.12-slim"
+    command: "bash ./backend.sh"
+    ports:
+      - "8000:8000"
+    volumes:
+      - "./backend:/app"
+      - "/app/.venv"
+    working_dir: "/app"
+    networks:
+      - app_net
+    env_file:
+      - .env
+  frontend:
+    image: "node:22-alpine"
+    command: "sh ./frontend.sh"
+    ports:
+      - "3000:3000"
+    volumes:
+      - "./frontend:/app"
+      - "/app/node_modules"
+    working_dir: "/app"
+    networks:
+      - app_net
+    env_file:
+      - .env
+  db:
+    image: "postgres:16-alpine"
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+    volumes:
+      - "postgres_data:/var/lib/postgresql/data"
+    networks:
+      - app_net
+volumes:
+  postgres_data: {}
+networks:
+  app_net:
+    driver: bridge
