@@ -76,7 +76,7 @@ export function LoginForm() {
           required
           autoComplete="current-password"
           errorId={error ? "login-error" : undefined}
-          link={{ label: "Forgot your password?", href: "/reset-password" }}
+          link={{ label: "Forgot your password?", href: "/forgot-password" }}
         />
 
         {error && (

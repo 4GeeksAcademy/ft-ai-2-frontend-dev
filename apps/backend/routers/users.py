@@ -16,8 +16,8 @@ from exceptions import (
     password_too_long,
     user_not_found,
 )
-from routers.auth import register as register_user
 from models.user import User, UserCreate, UserPublic, UserRole, UserUpdate
+from routers.auth import register as register_user
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -35,7 +35,7 @@ def _parse_user_id(raw: str) -> uuid.UUID:
     try:
         return uuid.UUID(raw)
     except ValueError:
-        raise invalid_user_id()
+        raise invalid_user_id() from None
 
 
 def _find_user_by_uuid(users_table, user_uuid: uuid.UUID) -> tuple[User, int]:
@@ -102,8 +102,6 @@ def delete_user(
     _user, doc_id = _find_user_by_uuid(users_table, user_uuid)
     users_table.remove(doc_ids=[doc_id])
     profiles_table.remove(lambda doc: doc.get("user_id") == str(user_uuid))
-
-    return None
 
 
 @router.put("/{user_id}", response_model=UserPublic)

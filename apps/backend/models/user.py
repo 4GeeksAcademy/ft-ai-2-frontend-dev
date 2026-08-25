@@ -4,11 +4,19 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
+from enum import Enum
 
-from pydantic import AliasChoices, BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    field_validator,
+)
 
 from exceptions import password_too_long
-from enum import Enum
+
 
 class UserRole(str, Enum):
     admin = "admin"
@@ -51,6 +59,7 @@ class User(BaseModel):
     gravatar_url: str
     is_active: bool = True
     role: UserRole = UserRole.user
+    password_changed_at: datetime | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
@@ -76,6 +85,20 @@ class RequestResetLinkRequest(BaseModel):
 class ResetPasswordRequest(BaseModel):
     """Request body for POST /auth/reset-password."""
     token: str
+    new_password: str = Field(min_length=8)
+
+    @field_validator("new_password")
+    @classmethod
+    def password_max_length(cls, v: str) -> str:
+        if len(v) > 128:
+            raise password_too_long()
+        return v
+
+
+class ChangePasswordRequest(BaseModel):
+    """Request body for POST /auth/change-password."""
+
+    current_password: str
     new_password: str = Field(min_length=8)
 
     @field_validator("new_password")
