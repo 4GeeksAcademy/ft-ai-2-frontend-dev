@@ -12,6 +12,7 @@
   dependencies and `uv sync` to install. The `uv.lock` file must be committed.
 - Manage JS dependencies with `pnpm`. Use `pnpm add <package>` to add
   dependencies and `pnpm install` to install. The `pnpm-lock.yaml` must be committed.
+- Prefer mermaid diagrams over ASCII diagrams when possible.
 
 ## Frontend (Next.js) Conventions
 

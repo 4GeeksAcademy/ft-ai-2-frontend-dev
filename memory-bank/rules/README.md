@@ -1,6 +1,6 @@
 # Safety Rules
 
-This directory contains the safety rules for developing **Wordweb**. Each file
+This directory contains the safety rules for developing in this repository. Each file
 addresses a specific concern area. Rules are small, self-contained, and should
 be referenced when making changes in the corresponding domain.
 
