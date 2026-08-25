@@ -1,0 +1,13 @@
+[project]
+name = "brevity-api"
+version = "0.1.0"
+description = "Brevity.app API (FastAPI + SQLModel) — Session 0 stub"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.141.1",
+    "uvicorn[standard]>=0.52.4",
+]
+
+[tool.uv]
+package = false
+

@@ -14,7 +14,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# Note: do not ignore bare `lib/` — Next.js apps use `brevity/lib/`.
 lib64/
 parts/
 sdist/
@@ -158,6 +158,17 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+
+# OS / editor
+.DS_Store
+Thumbs.db
 
 # Spyder project settings
 .spyderproject

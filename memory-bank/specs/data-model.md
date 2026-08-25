@@ -23,8 +23,12 @@
 | `author_id` | UUID (FK → User.id) | Who posted it |
 | `content` | String | Single word (letters + numbers only), max 200 chars, **or** `@username` tag |
 | `is_mention` | Boolean | True if content is `@username` |
-| `mentioned_user_id` | UUID (FK → User.id, nullable) | Resolved user if `is_mention` |
+| `mentioned_user_id` | UUID (FK → User.id, nullable) | Resolved user if `is_mention`; must exist at create time |
 | `created_at` | DateTime | Auto-set on creation |
+
+**Mention semantics:** A mention post is validated against an existing username.
+Timeline for user U includes: (1) posts by users U follows, (2) posts where
+`mentioned_user_id = U`, (3) posts by U. Mentions are not a separate inbox.
 
 ### Like
 

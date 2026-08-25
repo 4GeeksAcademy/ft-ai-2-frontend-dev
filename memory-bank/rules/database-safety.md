@@ -1,57 +1,75 @@
-# Database & Data Safety Rules (TinyDB)
+# Database & Data Safety Rules
 
-> Related specs: [Backend Spec](../specs/backend.md) | [Project Architecture](../specs/project-architecture.md)
+Brevity uses **two** stores. Apply the section that matches the service you are
+changing.
 
-## Write Safety
+| Store | Service | Specs |
+|-------|---------|-------|
+| PostgreSQL + SQLModel + Alembic | `brevity-api` | [data-model.md](../specs/data-model.md) |
+| TinyDB (JSON file) | `brevity-analytics` | [api-routes.md](../specs/api-routes.md) (analytics) |
 
-1. **Validate models before insert.** Every document inserted into TinyDB must
-   pass Pydantic model validation first. Use the TinyDB middleware for Pydantic
-   models that the project ships with.
+---
 
-2. **Use table-level operations.** Never perform raw storage operations on
-   `db._storage`. Always use `table.insert()`, `table.update()`, `table.upsert()`,
-   and `table.remove()`.
+## PostgreSQL (`brevity-api`)
 
-3. **Atomicity for multi-table updates.** When an operation spans multiple tables
-   (e.g., creating a node and linking it), ensure that a failure in one step
-   does not leave orphaned data. Implement rollback or compensate logic.
+### Schema & migrations
 
-4. **Write-ahead backup for destructive operations.** Before `table.update()` or
-   `table.remove()` that matches a broad query, serialize the affected documents
-   as a timestamped JSON backup under `backups/`.
+1. **Change schema via Alembic only.** Do not rely on `create_all` for
+   durable schema changes in shared/demo environments once migrations exist.
+2. **Mirror constraints in the ORM and DB.** Unique likes/follows, no
+   self-follow, and FKs belong in the database — not only in Python.
+3. **Validate at the API boundary.** Pydantic/SQLModel schemas validate
+   inputs before persistence (especially post content / mentions).
 
-## Read Safety
+### Write safety
 
-5. **Always scope queries.** Use `tinydb.Query()` to construct query predicates.
-   Never iterate over all documents and filter in a loop — that pattern grows
-   linearly with the dataset and bypasses any future indexing.
+4. **Use sessions and transactions.** Commit on success; roll back on error.
+   Do not leave half-applied multi-row social operations.
+5. **Never trust client-supplied ownership.** Deletes and likes must check
+   the authenticated user server-side.
+6. **Hash passwords only with the project password library.** Never store
+   plaintext. Never log password fields.
 
-6. **Limit unbounded reads.** Endpoints that return lists from TinyDB must
-   support pagination. Default to a reasonable page size (e.g., 50) and enforce
-   a hard maximum (e.g., 500).
+### Read safety
 
-7. **Escape user-supplied search terms.** When using `Query().field.search()`,
-   ensure the search term is validated and escaped. Avoid regex injection by
-   using `re.escape()` on user-supplied patterns.
+7. **Paginate list endpoints.** Default `limit` with a hard maximum
+   (e.g. 100). Prefer `limit`/`offset` for MVP.
+8. **Avoid N+1 in timeline queries.** Load like counts / `liked_by_me` in a
+   deliberate query pattern (join, subquery, or batched lookup).
+9. **Do not expose `password_hash`.** Response schemas must omit secrets.
 
-## Data Integrity
+### Integrity
 
-8. **UUIDs are the public ID.** All documents must use UUIDv4 strings as their
-   primary identifier (`eid`). Never expose the internal `doc_id` integer to
-   the client.
+10. **UUIDs as public IDs.** Do not expose internal surrogate details beyond
+    the agreed API types.
+11. **Resolve mention FKs before insert.** If `@username` does not exist,
+    fail the request — do not insert a dangling `mentioned_user_id`.
+12. **Cascade or clean up dependents** when deleting posts (likes) according
+    to the ORM relationship rules you define — document the choice in code.
 
-9. **Immutable audit fields.** Include `created_at` and `updated_at` timestamps
-   on every document. The `created_at` field must never be modified after
-   creation; only `updated_at` changes on writes.
+---
 
-10. **Type-safe serialization.** Use the project's UUID serializer and Pydantic
-    middleware for all TinyDB operations. Never manually serialize/deserialize
-    UUIDs or complex types.
+## TinyDB (`brevity-analytics`)
 
-11. **Validate references.** When a document references another document by UUID
-    (e.g., a link references a node), validate that the referenced document
-    exists before writing the reference.
+### Write safety
 
-12. **Handle missing data gracefully.** When a document is not found by UUID,
-    return a 404 error — not an empty document, a `None`, or a silent fallback
-    to default values.
+1. **Validate event payloads with Pydantic** before insert.
+2. **Use table-level APIs** (`insert`, `update`, `remove`). Do not touch
+   private storage internals.
+3. **Keep event documents append-mostly.** Prefer insert new events over
+   rewriting history.
+
+### Read safety
+
+4. **Paginate event lists.** Default page size (e.g. 50), hard max (e.g. 500).
+5. **Scope queries** with `tinydb.Query()` — avoid loading the entire table
+   into Python to filter.
+
+### Integrity
+
+6. **UUIDs for event IDs** exposed to clients; do not rely on TinyDB `doc_id`
+   as a public identifier.
+7. **Include `created_at` (or equivalent)** on every event; treat it as
+   immutable after insert.
+8. **Unauthenticated ingest is a demo tradeoff** (ADR-0006). Do not add
+   destructive admin APIs without auth. Document the risk in the README.

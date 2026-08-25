@@ -132,9 +132,14 @@ counts and post count.
 
 Query params: `?limit=20&offset=0`
 
-Returns posts from users the authenticated user follows, plus own posts, in
-reverse chronological order. Includes `like_count` and whether the current
-user has liked each post.
+Returns posts in reverse chronological order from:
+
+1. Users the authenticated user follows
+2. Posts that mention the authenticated user (`mentioned_user_id`)
+3. The authenticated user's own posts
+
+Includes `like_count` and whether the current user has liked each post.
+Deduplicate if a post matches more than one rule (e.g. own mention post).
 
 ---
 
@@ -159,7 +164,11 @@ user has liked each post.
 |--------|------|------|-------------|
 | `POST` | `/analytics/event` | No | Record an analytics event |
 | `GET` | `/analytics/events` | No | Query recent events (paginated) |
-| `WS` | `/analytics/ws` | No | WebSocket stream of live events |
+| `WS` | `/analytics/ws` | No | WebSocket stream of live **analytics** events |
+
+Unauthenticated ingest/stream is intentional for the workshop (see ADR-0006).
+This stream is **not** a live social feed; the UI does not sync likes/follows
+from WebSocket messages.
 
 ### POST /analytics/event
 

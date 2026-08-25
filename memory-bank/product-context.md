@@ -13,9 +13,16 @@ a genuinely unique take on "micro" blogging.
 ## Current Status
 
 - **Branch:** `module/observability`
-- **Phase:** Planning / specifications drafted
-- **MVP specs:** See [specs/mvp-scope.md](./specs/mvp-scope.md) for the full
-  scope, session breakdown, and success criteria
+- **Phase:** Session 0 complete — Compose mesh + service stubs running
+- **Near-term focus:** Session 1 (backend foundation: models, auth, CRUD,
+  analytics event store). Sessions 2–3 finish the product path; Session 4 adds
+  the trace viewer and end-to-end OTel demo
+- **Run:** `docker compose up --build` → http://localhost:3000,
+  http://localhost:8000/health, http://localhost:8001/health
+- **MVP specs:** See [specs/mvp-scope.md](./specs/mvp-scope.md) for scope,
+  session breakdown, demo script, and success criteria
+- **ADRs:** See [decisions/](./decisions/) for layout, auth, networking, mentions,
+  and observability choices
 - **Previous branch work:** The preceding modules built a full-stack auth demo
   (Turborepo + FastAPI + Next.js) and a relational database demo (Citizen Weather
   Tracker API with SQLModel/PostgreSQL). This module pivots to a new application
@@ -25,26 +32,29 @@ a genuinely unique take on "micro" blogging.
 
 - **One-word posts** — Messages are limited to a single word (letters and numbers
   only, max 200 characters). Tagging a user (`@username`) is the only exception
-  and prohibits additional text.
-- **Liking posts** — Users can react to posts.
+  and prohibits additional text. Mentions appear in the mentioned user's timeline.
+- **Liking posts** — Users can react to posts (optimistic UI + refetch; not
+  WebSocket-synced).
 - **Following users** — Follow other users to see their one-word posts in a feed.
-- **Observability instrumentation** — Every service emits structured telemetry
-  (logs, metrics, traces) to demonstrate end-to-end observability patterns.
+- **Analytics stream** — Live WebSocket of analytics events for teaching fan-out.
+- **Observability instrumentation** — Structured logs in Session 1; distributed
+  traces and a Compose-hosted viewer in Session 4 (after Session 0 bootstrap).
 
 ## Architecture
 
 - **Docker Compose** for containerization and local orchestration
 - **brevity** — Next.js 16 frontend using TypeScript and Tailwind CSS 4
 - **brevity api** — FastAPI backend using SQLModel
-    - Auth uses `jose` and `libpass` for JWT authentication
-    - Alembic for database migrations
-    - PostgreSQL for the relational database
+  - Auth uses `jose` and `libpass` for JWT authentication
+  - Alembic for database migrations
+  - PostgreSQL for the relational database
 - **brevity analytics** — FastAPI analytics server supporting both individual
   events via RESTful requests and streaming events via WebSockets
-    - TinyDB for lightweight analytics data storage
-- **Observability stack** — The three services will be instrumented to emit
-  structured logs, metrics, and distributed traces, demonstrating how to monitor
-  and debug a multi-service application.
+  - TinyDB for lightweight analytics data storage
+- **Observability stack** (Session 4) — OTel Collector + Jaeger (or equivalent)
+  so traces are visible during the workshop
+- **Networking** — Browser uses `localhost` ports; containers use Compose DNS
+  (see ADR-0008)
 
 ## Problem Statement
 

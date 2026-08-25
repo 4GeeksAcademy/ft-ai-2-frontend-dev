@@ -21,85 +21,44 @@ Each demonstration lives on its own branch:
 - File I/O Example: [module/file-io-example](https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev/tree/module/file-io-example)
 - TinyDB Example: [module/db-basics](https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev/tree/module/db-basics)
 - Relational Database (SQLModel): [module/relational-db](https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev/tree/module/relational-db)
+- Observability (Brevity.app): [module/observability](https://github.com/4GeeksAcademy/ft-ai-2-frontend-dev/tree/module/observability)
 <!-- TOC:END -->
 
-## Current Branch: `module/relational-db` — Citizen Weather Tracker API
+## Current Branch: `module/observability` — Brevity.app
 
-A FastAPI backend demonstrating **SQLModel ORM** with PostgreSQL, covering all three core relationship types (one-to-many, many-to-many, and self-referential — planned).
+A three-service microblog built as a **teaching tool for observability**
+(logs, metrics, distributed traces). Posts are limited to a single word (or a
+sole `@username` mention).
+
+See [memory-bank/product-context.md](./memory-bank/product-context.md) and
+[memory-bank/specs/mvp-scope.md](./memory-bank/specs/mvp-scope.md).
+
+### Session 0 status
+
+Scaffold only: Compose mesh, health stubs, placeholder UI. Domain features
+start in Session 1.
 
 ### Tech Stack
 
-| Tool        | Purpose                     |
-|-------------|-----------------------------|
-| **FastAPI** | Web framework & API routing |
-| **SQLModel**| ORM (Pydantic + SQLAlchemy) |
-| **PostgreSQL** | Relational database     |
-| **psycopg** | PostgreSQL driver (binary)  |
-| **uv**      | Python package manager      |
-
-### Data Model
-
-| Model         | Key Fields                                      | Relationships                                                       |
-|---------------|-------------------------------------------------|---------------------------------------------------------------------|
-| **User**      | `id`, `email` (unique), `name`                 | Owns weather data (`1:N`), owns projects (`1:N`)                    |
-| **WeatherData** | `id`, `lat`, `lon`, `temp`, `humidity`, `pressure`, `windspeed`, `wind_dir`, `altitude`, `recorded_at` | Belongs to a user (`N:1`), linked to projects (`N:M`) |
-| **Project**   | `id`, `title`, `description`                   | Owned by a user (`N:1`), linked to weather data (`N:M`) via join table |
-
-A **`WeatherDataProjectLink`** join table manages the many-to-many relationship between weather records and projects.
-
-### API Endpoints
-
-#### Users (`/users`)
-
-| Method   | Path              | Description                                       |
-|----------|-------------------|---------------------------------------------------|
-| `POST`   | `/users/`         | Create a user                                     |
-| `GET`    | `/users/`         | List users (paginated)                            |
-| `GET`    | `/users/{id}`     | Get a single user with their weather & projects    |
-| `PATCH`  | `/users/{id}`     | Update a user                                     |
-| `DELETE` | `/users/{id}`     | Delete a user (cascades to weather & projects)     |
-
-#### Weather Data (`/weather`)
-
-| Method   | Path                 | Description                                       |
-|----------|----------------------|---------------------------------------------------|
-| `POST`   | `/weather/`          | Create a weather record                           |
-| `GET`    | `/weather/`          | List weather data (filter by user, location, date)|
-| `GET`    | `/weather/stats`     | Aggregated weather stats (avg temp, humidity, etc.)|
-| `GET`    | `/weather/{id}`      | Get a single weather record with user & projects   |
-
-#### Projects (`/projects`)
-
-| Method   | Path                              | Description                               |
-|----------|-----------------------------------|-------------------------------------------|
-| `POST`   | `/projects/`                      | Create a project                          |
-| `GET`    | `/projects/`                      | List projects (filter by owner)           |
-| `GET`    | `/projects/{id}`                  | Get a project with owner & linked weather  |
-| `PATCH`  | `/projects/{id}`                  | Partially update a project                |
-| `DELETE` | `/projects/{id}`                  | Delete a project & unlink weather data     |
-| `POST`   | `/projects/{id}/weather/{w_id}`   | Link a weather record to a project        |
-| `DELETE` | `/projects/{id}/weather/{w_id}`   | Unlink a weather record from a project    |
+| Service | Stack |
+|---------|--------|
+| **brevity** | Next.js 16, React 19, Tailwind CSS 4, pnpm |
+| **brevity-api** | FastAPI, uv (SQLModel/Postgres in Session 1) |
+| **brevity-analytics** | FastAPI, TinyDB, uv |
+| **postgres** | postgres:16-alpine |
 
 ### Running Locally
 
-1. **Create a `.env` file** with your PostgreSQL connection string (using the `psycopg` driver):
-   ```env
-   DB_URL=postgresql+psycopg://user:password@host:port/dbname
-   ```
-
-2. **Install dependencies** and start the server:
+1. Copy env defaults: `cp .env.example .env` (optional for Compose; values are
+   also set in `docker-compose.yml`).
+2. Start everything:
    ```bash
-   uv sync
-   uv run uvicorn main:app --reload
+   docker compose up --build
    ```
+3. Open:
+   - Frontend: [http://localhost:3000](http://localhost:3000)
+   - API health: [http://localhost:8000/health](http://localhost:8000/health)
+   - Analytics health: [http://localhost:8001/health](http://localhost:8001/health)
 
-3. **Open the interactive docs** at [http://localhost:8000/docs](http://localhost:8000/docs)
-
-### Health Check
-
-```bash
-curl http://localhost:8000/health
-# {"status":"ok"}
-```
-
-
+Browser clients must use `localhost` URLs (`NEXT_PUBLIC_*`). Container-to-container
+calls use Compose DNS (`API_URL`, `ANALYTICS_URL`) — see ADR-0008.
