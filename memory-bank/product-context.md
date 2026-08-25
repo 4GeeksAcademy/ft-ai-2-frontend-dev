@@ -1,19 +1,24 @@
-# Citizen Weather Tracker API
+# Brevity.app - The micro-est microblog.
 
-Citizen Weather Tracker API is a prototype backend for a community project to track weather patterns over a county for use by scientists.
+This is an application intended to be a very stripped-down microblogging service allowing users to post incredibly short messages that other users can see and respond to.  This is intended as a demonstration of observability and telemetry in applications.
 
 ## Key Features
 
-- Uploading weather data along with location data.
-- Uploading images alongside the weather data (mocked up, bulk file storage will come later.)
-- Downloading CSV files with queries to filter the data.
+- Posting short text messages on the platform (limited to 200 characters, but characters that aren't letters or numbers are disallowed unless tagging another user, in which case you may only @ the user and add no more text.)
+- Liking posts
+- Following users to see their one-word posts
 
 ## Architecture
 
-- FastAPI using SQLmodel for database storage, and `uv` for package management.
-- Postgres DB hosted by supabase and connected to using a connection string and *not* their python package.
+- docker compose for containerization
+- brevity: NextJS 16 frontend using Typescript and TailwindCSS 4
+- brevity api: FastAPI backend using SQLModel
+    - Auth uses `jose` and `libpass` for JWT authentication
+    - alembic for database migrations
+    - postgres for a relational database
+- brevity analytics: FastAPI analytics server supporting both individual events using RESTful requests and streaming events using WebSockets
+    - TinyDB for analytics data storage.
 
 ## Users
 
-- Laypeople will be able to submit weather data and track favorite locations.
-- Scientists will be able to administrate data, as well as export it as a csv.
+- People who belive that brevity is the heart of wit, and are taking that idea to the logical extremes.
