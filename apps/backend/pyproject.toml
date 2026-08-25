@@ -1,0 +1,33 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "FastAPI backend for ft-ai-2-frontend-dev"
+readme = "README.md"
+authors = [
+    { name = "Shane B.", email = "dotfortun@users.noreply.github.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "tinydb>=4.8.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "python-jose[cryptography]>=3.3.0",
+    "libpass[bcrypt]>=1.9.0",
+    "python-multipart>=0.0.9",
+    "email-validator>=2.3.0",
+    "resend>=2.40.1",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# B008 is a known false-positive for FastAPI's Depends() — the function call
+# is intentional and safe in this context.
+"dependencies.py" = ["B008"]
+"routers/*" = ["B008"]
+
+[dependency-groups]
+dev = ["ruff>=0.9.0"]
+
+[tool.uv]
+package = false
