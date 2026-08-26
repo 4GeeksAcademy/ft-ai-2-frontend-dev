@@ -17,6 +17,15 @@ from app.schemas import FollowUserBrief
 router = APIRouter(prefix="/social", tags=["social"])
 
 
+def _otel_context():
+    try:
+        from opentelemetry import context
+
+        return context.get_current()
+    except Exception:
+        return None
+
+
 @router.post("/follow/{username}", status_code=status.HTTP_201_CREATED)
 def follow_user(
     username: str,
@@ -58,6 +67,7 @@ def follow_user(
         user_id=str(current_user.id),
         metadata={"followed_username": target.username, "followed_id": str(target.id)},
         traceparent=getattr(request.state, "traceparent", None),
+        otel_context=_otel_context(),
     )
     return {"status": "following", "username": target.username}
 
@@ -98,6 +108,7 @@ def unfollow_user(
         user_id=str(current_user.id),
         metadata={"followed_username": target.username, "followed_id": str(target.id)},
         traceparent=getattr(request.state, "traceparent", None),
+        otel_context=_otel_context(),
     )
 
 
@@ -205,6 +216,7 @@ def like_post(
         user_id=str(current_user.id),
         metadata={"post_id": str(post.id)},
         traceparent=getattr(request.state, "traceparent", None),
+        otel_context=_otel_context(),
     )
     return {"status": "liked", "post_id": str(post.id)}
 
@@ -245,4 +257,5 @@ def unlike_post(
         user_id=str(current_user.id),
         metadata={"post_id": str(post.id)},
         traceparent=getattr(request.state, "traceparent", None),
+        otel_context=_otel_context(),
     )

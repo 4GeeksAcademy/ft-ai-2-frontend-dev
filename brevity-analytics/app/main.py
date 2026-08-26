@@ -1,11 +1,11 @@
-"""Brevity Analytics — Session 1 event store + WebSocket skeleton."""
+"""Brevity Analytics — with Session 4 OpenTelemetry instrumentation."""
 
 from __future__ import annotations
 
 import logging
 import os
-import time
 import traceback
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from typing import Annotated
 
@@ -13,36 +13,50 @@ from fastapi import FastAPI, Query, Request, WebSocket, WebSocketDisconnect, sta
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.cors import cors_origin_regex_from_env, cors_origins_from_env
 from app.event_store import event_store
 from app.logging_config import configure_logging
+from app.metrics import MetricsTimer, metrics_response, record_request
 from app.schemas import EventCreateRequest, EventResponse, HealthResponse
+from app.telemetry import get_tracer, instrument_fastapi, setup_telemetry, shutdown_telemetry
 from app.websocket import ws_manager
 
 configure_logging(os.getenv("LOG_LEVEL", "INFO"))
 logger = logging.getLogger("brevity-analytics")
 
-app = FastAPI(title="brevity-analytics", version="0.1.0")
 
-cors_origins = [
-    origin.strip()
-    for origin in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
-    if origin.strip()
-]
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    if setup_telemetry("brevity-analytics"):
+        instrument_fastapi(_app)
+    yield
+    shutdown_telemetry()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+
+app = FastAPI(title="brevity-analytics", version="0.1.0", lifespan=lifespan)
+
+cors_origins = cors_origins_from_env()
+cors_origin_regex = cors_origin_regex_from_env()
+logger.info(
+    "cors configured origins=%s regex=%s",
+    cors_origins,
+    cors_origin_regex,
 )
 
 
 @app.middleware("http")
 async def request_timing(request: Request, call_next):
-    start = time.perf_counter()
+    timer = MetricsTimer()
     response = await call_next(request)
-    duration_ms = round((time.perf_counter() - start) * 1000, 2)
+    duration_s = timer.seconds()
+    duration_ms = round(duration_s * 1000, 2)
+    record_request(
+        service="brevity-analytics",
+        method=request.method,
+        path=request.url.path,
+        status_code=response.status_code,
+        duration_s=duration_s,
+    )
     logger.info(
         "request completed",
         extra={
@@ -54,6 +68,17 @@ async def request_timing(request: Request, call_next):
     )
     response.headers["X-Process-Time-Ms"] = str(duration_ms)
     return response
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,
+    allow_origin_regex=cors_origin_regex,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["traceparent", "X-Process-Time-Ms"],
+)
 
 
 @app.exception_handler(Exception)
@@ -80,6 +105,11 @@ def health() -> HealthResponse:
     )
 
 
+@app.get("/metrics")
+def metrics():
+    return metrics_response()
+
+
 @app.post(
     "/analytics/event",
     response_model=EventResponse,
@@ -87,27 +117,51 @@ def health() -> HealthResponse:
 )
 async def create_event(request: Request, body: EventCreateRequest) -> EventResponse:
     traceparent = request.headers.get("traceparent")
-    event = event_store.insert_event(
-        event_type=body.event_type,
-        user_id=body.user_id,
-        metadata=body.metadata,
-    )
-    await ws_manager.broadcast(event)
-    logger.info(
-        "event stored",
-        extra={
-            "path": "/analytics/event",
-            "method": "POST",
-            "status_code": 201,
-        },
-    )
-    if traceparent:
-        logger.info(
-            "received traceparent=%s for event_type=%s",
-            traceparent,
-            body.event_type,
-        )
-    return EventResponse(**event)
+    token = None
+    try:
+        from opentelemetry import context as otel_context
+        from opentelemetry.propagate import extract
+
+        carrier = {k.lower(): v for k, v in request.headers.items()}
+        token = otel_context.attach(extract(carrier))
+    except Exception:
+        token = None
+
+    try:
+        tracer = get_tracer("brevity-analytics")
+        with tracer.start_as_current_span("analytics.store_event") as span:
+            span.set_attribute("analytics.event_type", body.event_type)
+            if traceparent:
+                span.set_attribute("messaging.traceparent", traceparent)
+            event = event_store.insert_event(
+                event_type=body.event_type,
+                user_id=body.user_id,
+                metadata=body.metadata,
+            )
+            await ws_manager.broadcast(event)
+            logger.info(
+                "event stored",
+                extra={
+                    "path": "/analytics/event",
+                    "method": "POST",
+                    "status_code": 201,
+                },
+            )
+            if traceparent:
+                logger.info(
+                    "received traceparent=%s for event_type=%s",
+                    traceparent,
+                    body.event_type,
+                )
+            return EventResponse(**event)
+    finally:
+        if token is not None:
+            try:
+                from opentelemetry import context as otel_context
+
+                otel_context.detach(token)
+            except Exception:
+                pass
 
 
 @app.get("/analytics/events", response_model=list[EventResponse])
@@ -129,7 +183,6 @@ async def analytics_ws(websocket: WebSocket) -> None:
     await ws_manager.connect(websocket)
     try:
         while True:
-            # Keep the connection alive; clients may send pings/text.
             await websocket.receive_text()
     except WebSocketDisconnect:
         await ws_manager.disconnect(websocket)

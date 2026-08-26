@@ -44,9 +44,54 @@ def emit_event(
     user_id: str | None,
     metadata: dict[str, Any] | None = None,
     traceparent: str | None = None,
+    otel_context: Any = None,
 ) -> None:
     """Best-effort emit; never raise into the request path."""
-    outbound_tp = continue_trace(traceparent)
+    token = None
+    if otel_context is not None:
+        try:
+            from opentelemetry import context as otel_ctx_mod
+
+            token = otel_ctx_mod.attach(otel_context)
+        except Exception:
+            token = None
+
+    try:
+        headers: dict[str, str] = {"Content-Type": "application/json"}
+        try:
+            from opentelemetry import trace
+            from opentelemetry.propagate import inject
+
+            tracer = trace.get_tracer("brevity-api.analytics")
+            with tracer.start_as_current_span("analytics.emit") as span:
+                span.set_attribute("analytics.event_type", event_type)
+                if user_id:
+                    span.set_attribute("enduser.id", user_id)
+                inject(headers)
+                outbound_tp = headers.get("traceparent") or continue_trace(traceparent)
+                headers["traceparent"] = outbound_tp
+                _post_event(event_type, user_id, metadata, headers, outbound_tp)
+        except Exception:
+            outbound_tp = continue_trace(traceparent)
+            headers["traceparent"] = outbound_tp
+            _post_event(event_type, user_id, metadata, headers, outbound_tp)
+    finally:
+        if token is not None:
+            try:
+                from opentelemetry import context as otel_ctx_mod
+
+                otel_ctx_mod.detach(token)
+            except Exception:
+                pass
+
+
+def _post_event(
+    event_type: str,
+    user_id: str | None,
+    metadata: dict[str, Any] | None,
+    headers: dict[str, str],
+    outbound_tp: str,
+) -> None:
     payload = {
         "event_type": event_type,
         "user_id": user_id,
@@ -54,10 +99,6 @@ def emit_event(
             **(metadata or {}),
             "traceparent": outbound_tp,
         },
-    }
-    headers = {
-        "Content-Type": "application/json",
-        "traceparent": outbound_tp,
     }
     try:
         with httpx.Client(timeout=2.0) as client:

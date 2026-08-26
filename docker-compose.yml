@@ -15,15 +15,40 @@ services:
       timeout: 5s
       retries: 10
 
+  jaeger:
+    image: jaegertracing/jaeger:2.3.0
+    ports:
+      - "16686:16686" # Jaeger UI
+      # OTLP gRPC kept internal for the collector
+      - "4317"
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.114.0
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+    ports:
+      - "4318:4318" # OTLP HTTP (apps → collector)
+      - "8889:8889" # Prometheus metrics scrape
+    depends_on:
+      - jaeger
+
   brevity-analytics:
     build: ./brevity-analytics
     ports:
       - "8001:8001"
     environment:
-      CORS_ORIGINS: http://localhost:3000
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:8000,http://localhost:8001,http://127.0.0.1:3000,http://127.0.0.1:8000,http://127.0.0.1:8001}
       ANALYTICS_DB_PATH: /app/data/events.json
+      OTEL_SERVICE_NAME: brevity-analytics
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_BSP_SCHEDULE_DELAY: ${OTEL_BSP_SCHEDULE_DELAY:-1000}
+      OTEL_BSP_MAX_EXPORT_BATCH_SIZE: ${OTEL_BSP_MAX_EXPORT_BATCH_SIZE:-64}
+      OTEL_METRIC_EXPORT_INTERVAL: ${OTEL_METRIC_EXPORT_INTERVAL:-5000}
     volumes:
       - analytics-data:/app/data
+    depends_on:
+      - otel-collector
 
   brevity-api:
     build: ./brevity-api
@@ -34,11 +59,18 @@ services:
         condition: service_healthy
       brevity-analytics:
         condition: service_started
+      otel-collector:
+        condition: service_started
     environment:
       DB_URL: postgresql+psycopg://brevity:brevity@postgres:5432/brevity
       JWT_SECRET: ${JWT_SECRET:-dev-secret}
       ANALYTICS_URL: http://brevity-analytics:8001
-      CORS_ORIGINS: http://localhost:3000
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:8000,http://localhost:8001,http://127.0.0.1:3000,http://127.0.0.1:8000,http://127.0.0.1:8001}
+      OTEL_SERVICE_NAME: brevity-api
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_BSP_SCHEDULE_DELAY: ${OTEL_BSP_SCHEDULE_DELAY:-1000}
+      OTEL_BSP_MAX_EXPORT_BATCH_SIZE: ${OTEL_BSP_MAX_EXPORT_BATCH_SIZE:-64}
+      OTEL_METRIC_EXPORT_INTERVAL: ${OTEL_METRIC_EXPORT_INTERVAL:-5000}
 
   brevity:
     build:

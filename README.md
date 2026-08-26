@@ -30,35 +30,46 @@ A three-service microblog built as a **teaching tool for observability**
 (logs, metrics, distributed traces). Posts are limited to a single word (or a
 sole `@username` mention).
 
-See [memory-bank/product-context.md](./memory-bank/product-context.md) and
-[memory-bank/specs/mvp-scope.md](./memory-bank/specs/mvp-scope.md).
-
-### Session 0 status
-
-Scaffold only: Compose mesh, health stubs, placeholder UI. Domain features
-start in Session 1.
+Specs: [memory-bank/product-context.md](./memory-bank/product-context.md) ·
+[mvp-scope.md](./memory-bank/specs/mvp-scope.md) ·
+**[DEMO.md](./DEMO.md)** (runbook)
 
 ### Tech Stack
 
 | Service | Stack |
 |---------|--------|
 | **brevity** | Next.js 16, React 19, Tailwind CSS 4, pnpm |
-| **brevity-api** | FastAPI, uv (SQLModel/Postgres in Session 1) |
-| **brevity-analytics** | FastAPI, TinyDB, uv |
+| **brevity-api** | FastAPI, SQLModel, Postgres, Alembic, OpenTelemetry |
+| **brevity-analytics** | FastAPI, TinyDB, OpenTelemetry |
 | **postgres** | postgres:16-alpine |
+| **otel-collector** | OTLP → Jaeger + Prometheus |
+| **jaeger** | Trace UI (`:16686`) |
 
 ### Running Locally
 
-1. Copy env defaults: `cp .env.example .env` (optional for Compose; values are
-   also set in `docker-compose.yml`).
-2. Start everything:
-   ```bash
-   docker compose up --build
-   ```
-3. Open:
-   - Frontend: [http://localhost:3000](http://localhost:3000)
-   - API health: [http://localhost:8000/health](http://localhost:8000/health)
-   - Analytics health: [http://localhost:8001/health](http://localhost:8001/health)
+```bash
+cp .env.example .env    # optional
+docker compose up --build
+uv run --project brevity-api python scripts/seed.py
+```
 
-Browser clients must use `localhost` URLs (`NEXT_PUBLIC_*`). Container-to-container
-calls use Compose DNS (`API_URL`, `ANALYTICS_URL`) — see ADR-0008.
+| URL | Purpose |
+|-----|---------|
+| http://localhost:3000 | App |
+| http://localhost:8000/health | API health (+ DB) |
+| http://localhost:8001/health | Analytics health |
+| http://localhost:8000/metrics | API Prometheus metrics |
+| http://localhost:8001/metrics | Analytics Prometheus metrics |
+| http://localhost:16686 | Jaeger UI |
+| http://localhost:8889/metrics | Collector-scraped OTLP metrics |
+
+Browser clients use `localhost` (`NEXT_PUBLIC_*`). Containers use Compose DNS
+(`API_URL`, `ANALYTICS_URL`, `OTEL_EXPORTER_OTLP_ENDPOINT`) — see ADR-0008.
+
+### Observability notes
+
+- Structured JSON logs on API + analytics
+- **Batched** OTLP export: `BatchSpanProcessor` + periodic metric reader
+  (not `SimpleSpanProcessor`) — see `DEMO.md` for knobs
+- API → analytics propagates W3C `traceparent`; post-create traces span both services
+- Telemetry is fail-open if the collector is down

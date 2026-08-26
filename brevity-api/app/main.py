@@ -1,11 +1,11 @@
-"""Brevity API — Session 1 backend foundation."""
+"""Brevity API — with Session 4 OpenTelemetry instrumentation."""
 
 from __future__ import annotations
 
 import logging
 import os
-import time
 import traceback
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
 from fastapi import FastAPI, Request
@@ -14,29 +14,36 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from app.analytics_client import resolve_request_traceparent
+from app.cors import cors_origin_regex_from_env, cors_origins_from_env
 from app.database import engine
 from app.logging_config import configure_logging
+from app.metrics import MetricsTimer, metrics_response, record_request
 from app.routers import auth, posts, social, users
 from app.schemas import HealthResponse
+from app.telemetry import (
+    instrument_fastapi,
+    instrument_httpx,
+    setup_telemetry,
+    shutdown_telemetry,
+)
 
 configure_logging(os.getenv("LOG_LEVEL", "INFO"))
 logger = logging.getLogger("brevity-api")
 
-app = FastAPI(title="brevity-api", version="0.1.0")
 
-cors_origins = [
-    origin.strip()
-    for origin in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
-    if origin.strip()
-]
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    if setup_telemetry("brevity-api"):
+        instrument_httpx()
+        instrument_fastapi(_app)
+    yield
+    shutdown_telemetry()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
+app = FastAPI(title="brevity-api", version="0.1.0", lifespan=lifespan)
+
+cors_origins = cors_origins_from_env()
+cors_origin_regex = cors_origin_regex_from_env()
 
 app.include_router(auth.router)
 app.include_router(users.router)
@@ -46,18 +53,47 @@ app.include_router(social.router)
 
 @app.middleware("http")
 async def attach_traceparent(request: Request, call_next):
-    traceparent = resolve_request_traceparent(request.headers.get("traceparent"))
-    request.state.traceparent = traceparent
+    # Prefer incoming W3C header; do not mint a competing ID when OTel owns the span.
+    incoming = request.headers.get("traceparent")
+    if incoming:
+        request.state.traceparent = resolve_request_traceparent(incoming)
+    else:
+        request.state.traceparent = None
+
     response = await call_next(request)
-    response.headers["traceparent"] = traceparent
+
+    # Echo the active OTel span's traceparent when available.
+    try:
+        from opentelemetry import trace
+
+        span = trace.get_current_span()
+        ctx = span.get_span_context()
+        if ctx.is_valid:
+            flags = int(ctx.trace_flags)
+            tp = f"00-{ctx.trace_id:032x}-{ctx.span_id:016x}-{flags:02x}"
+            request.state.traceparent = tp
+            response.headers["traceparent"] = tp
+        elif getattr(request.state, "traceparent", None):
+            response.headers["traceparent"] = request.state.traceparent
+    except Exception:
+        if getattr(request.state, "traceparent", None):
+            response.headers["traceparent"] = request.state.traceparent
     return response
 
 
 @app.middleware("http")
 async def request_timing(request: Request, call_next):
-    start = time.perf_counter()
+    timer = MetricsTimer()
     response = await call_next(request)
-    duration_ms = round((time.perf_counter() - start) * 1000, 2)
+    duration_s = timer.seconds()
+    duration_ms = round(duration_s * 1000, 2)
+    record_request(
+        service="brevity-api",
+        method=request.method,
+        path=request.url.path,
+        status_code=response.status_code,
+        duration_s=duration_s,
+    )
     logger.info(
         "request completed",
         extra={
@@ -69,6 +105,17 @@ async def request_timing(request: Request, call_next):
     )
     response.headers["X-Process-Time-Ms"] = str(duration_ms)
     return response
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,
+    allow_origin_regex=cors_origin_regex,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["traceparent", "X-Process-Time-Ms"],
+)
 
 
 @app.exception_handler(Exception)
@@ -102,3 +149,8 @@ def health() -> HealthResponse:
         timestamp=datetime.now(timezone.utc).isoformat(),
         database=db_status,
     )
+
+
+@app.get("/metrics")
+def metrics():
+    return metrics_response()

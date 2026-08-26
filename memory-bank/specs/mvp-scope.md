@@ -69,17 +69,17 @@ When Session 3 is complete:
 - [x] Live analytics WebSocket viewer at `/analytics`
 - [x] API → analytics calls propagate W3C `traceparent`
 
-### Session 4 — definition of done (planned)
+### Session 4 — definition of done
 
 When Session 4 is complete:
 
-- [ ] OTel Collector + Jaeger (or equivalent) in Compose; apps export OTLP
-- [ ] Services use **batched** exporters (`BatchSpanProcessor`, periodic
-      metric reader) — call out vs `SimpleSpanProcessor` in the demo runbook
-- [ ] A post-create request is visible as a distributed trace (API → analytics)
-- [ ] Basic request metrics exposed / visible in the stack
-- [ ] README + demo runbook cover viewer URL and batching knobs
-      (schedule delay, max queue/export size)
+- [x] OTel Collector + Jaeger in Compose; apps export OTLP HTTP
+- [x] Services use **batched** exporters (`BatchSpanProcessor`, periodic
+      metric reader) — documented vs `SimpleSpanProcessor` in DEMO.md
+- [x] A post-create request is visible as a distributed trace (API → analytics)
+- [x] Basic request metrics at `/metrics` + collector Prometheus `:8889`
+- [x] README + DEMO.md cover viewer URL and batching knobs
+
 
 ## In Scope (MVP)
 

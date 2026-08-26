@@ -18,6 +18,15 @@ from app.schemas import MENTION_RE, PostCreateRequest, PostResponse
 router = APIRouter(prefix="/posts", tags=["posts"])
 
 
+def _otel_context():
+    try:
+        from opentelemetry import context
+
+        return context.get_current()
+    except Exception:
+        return None
+
+
 @router.post("", response_model=PostResponse, status_code=status.HTTP_201_CREATED)
 def create_post(
     body: PostCreateRequest,
@@ -59,6 +68,7 @@ def create_post(
             "is_mention": post.is_mention,
         },
         traceparent=getattr(request.state, "traceparent", None),
+        otel_context=_otel_context(),
     )
 
     return posts_to_responses(
@@ -148,4 +158,5 @@ def delete_post(
         user_id=str(current_user.id),
         metadata={"post_id": str(post_id)},
         traceparent=getattr(request.state, "traceparent", None),
+        otel_context=_otel_context(),
     )
