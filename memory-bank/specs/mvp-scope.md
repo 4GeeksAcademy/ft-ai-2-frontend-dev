@@ -21,7 +21,7 @@ collector/viewer and polish land in Session 4.
 | **1** | Live | Backend foundation | SQLModel models + Alembic, JWT auth, core CRUD (posts, users), analytics REST + WebSocket skeleton with real event store wiring, structured JSON logging + real `/health` (API checks DB) |
 | **2** | Live | Frontend core | Auth pages (login/register), post creation, timeline feed, dark zinc theme, wire seed/demo users for a non-empty first feed |
 | **3** | Live | Social + analytics | Follow/unfollow, like/unlike (optimistic UI + refetch), analytics event emission from API/client, live **analytics** WS stream, propagate `traceparent` on API → analytics |
-| **4** | Live | Observability & polish | OTel Collector + Jaeger (or equivalent) in Compose, distributed tracing demo, metrics endpoints, README, demo runbook polish |
+| **4** | Live | Observability & polish | OTel Collector + Jaeger (or equivalent) in Compose, **batched** OTLP export (BatchSpanProcessor / periodic metrics), distributed tracing demo, metrics endpoints, README, demo runbook polish |
 
 ### Session 0 — definition of done
 
@@ -37,6 +37,49 @@ skill where applicable. When Session 0 is complete:
       Dockerfiles and placeholder `GET /health`
 - [x] Directory layout matches [architecture.md](./architecture.md)
 - [x] No SQLModel domain models, auth, social features, or Jaeger yet
+
+### Session 1 — definition of done
+
+When Session 1 is complete:
+
+- [x] SQLModel models for User, Post, Like, Follow + Alembic migration applied on API startup
+- [x] JWT auth (`POST /auth/register`, `POST /auth/login`, 30-min expiry)
+- [x] Users + posts CRUD (including timeline with follows/mentions/own posts)
+- [x] Social routes (follow/like) available for later sessions
+- [x] Analytics TinyDB event store + `POST /analytics/event`, `GET /analytics/events`, `WS /analytics/ws`
+- [x] Structured JSON logging on API and analytics; API `/health` checks Postgres
+
+### Session 2 — definition of done
+
+When Session 2 is complete:
+
+- [x] Auth pages (login/register) with React 19 `<form action>` + JWT in memory
+- [x] Timeline feed + create-post form wired to the API
+- [x] Dark zinc theme
+- [x] Basic profile page
+- [x] Seed script creates demo users/posts/follow for a non-empty first feed
+
+### Session 3 — definition of done
+
+When Session 3 is complete:
+
+- [x] Like / follow buttons with optimistic UI + parent state patch
+- [x] API emits analytics events (post/like/follow) via background tasks
+- [x] Client emits `page_view` events
+- [x] Live analytics WebSocket viewer at `/analytics`
+- [x] API → analytics calls propagate W3C `traceparent`
+
+### Session 4 — definition of done (planned)
+
+When Session 4 is complete:
+
+- [ ] OTel Collector + Jaeger (or equivalent) in Compose; apps export OTLP
+- [ ] Services use **batched** exporters (`BatchSpanProcessor`, periodic
+      metric reader) — call out vs `SimpleSpanProcessor` in the demo runbook
+- [ ] A post-create request is visible as a distributed trace (API → analytics)
+- [ ] Basic request metrics exposed / visible in the stack
+- [ ] README + demo runbook cover viewer URL and batching knobs
+      (schedule delay, max queue/export size)
 
 ## In Scope (MVP)
 
@@ -73,6 +116,8 @@ skill where applicable. When Session 0 is complete:
 - Health check endpoints (`GET /health`) — stubs OK in Session 0; real checks in Session 1
 - Basic request metrics (count, duration, status codes)
 - OpenTelemetry distributed tracing across services — Session 3–4
+- **Batched telemetry export** (spans/metrics via batch processors, not
+  per-span sync export) — Session 4 teaching point
 - Trace/metrics **viewer** in Docker Compose — Session 4 only
 
 ### Frontend (Next.js 16)
@@ -109,7 +154,8 @@ See [decisions/](../decisions/) for the full records. Summary:
 1. **Layout:** Docker Compose with separate directories at repo root (no Turborepo)
 2. **Post constraint:** Enforced at the API layer (Pydantic); DB stores the raw string
 3. **Analytics storage:** TinyDB (JSON file)
-4. **Observability:** OpenTelemetry + a Compose-hosted viewer (Jaeger or equivalent)
+4. **Observability:** OpenTelemetry + Compose-hosted viewer; **batched** OTLP
+   export in Session 4 (see ADR-0004)
 5. **Auth storage:** JWT in React memory; client-side authenticated fetches only
 6. **"Real time":** Analytics WebSocket for event demo; likes/follows use optimistic UI + refetch
 7. **Mentions:** Included in the mentioned user's timeline
@@ -137,3 +183,5 @@ See [decisions/](../decisions/) for the full records. Summary:
 5. Like a post; UI updates; see `like_created` on the analytics stream
 6. As user B, confirm an `@A` mention appears in A's feed (or create one live)
 7. *(Session 4)* Open Jaeger (or equivalent); find the post-create trace spanning API → analytics
+8. *(Session 4)* Note batched export: generate several requests, observe spans
+   arrive in the viewer after the batch window (not one HTTP export per span)

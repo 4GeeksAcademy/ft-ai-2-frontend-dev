@@ -15,6 +15,16 @@ services:
       timeout: 5s
       retries: 10
 
+  brevity-analytics:
+    build: ./brevity-analytics
+    ports:
+      - "8001:8001"
+    environment:
+      CORS_ORIGINS: http://localhost:3000
+      ANALYTICS_DB_PATH: /app/data/events.json
+    volumes:
+      - analytics-data:/app/data
+
   brevity-api:
     build: ./brevity-api
     ports:
@@ -22,20 +32,13 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      brevity-analytics:
+        condition: service_started
     environment:
       DB_URL: postgresql+psycopg://brevity:brevity@postgres:5432/brevity
       JWT_SECRET: ${JWT_SECRET:-dev-secret}
       ANALYTICS_URL: http://brevity-analytics:8001
       CORS_ORIGINS: http://localhost:3000
-
-  brevity-analytics:
-    build: ./brevity-analytics
-    ports:
-      - "8001:8001"
-    environment:
-      CORS_ORIGINS: http://localhost:3000
-    volumes:
-      - analytics-data:/app/data
 
   brevity:
     build:

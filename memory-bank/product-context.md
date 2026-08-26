@@ -52,7 +52,7 @@ a genuinely unique take on "micro" blogging.
   events via RESTful requests and streaming events via WebSockets
   - TinyDB for lightweight analytics data storage
 - **Observability stack** (Session 4) — OTel Collector + Jaeger (or equivalent)
-  so traces are visible during the workshop
+  with **batched** OTLP export so traces/metrics are visible during the workshop
 - **Networking** — Browser uses `localhost` ports; containers use Compose DNS
   (see ADR-0008)
 

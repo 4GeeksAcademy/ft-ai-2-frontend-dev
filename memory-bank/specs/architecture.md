@@ -100,8 +100,10 @@ httpOnly cookies (out of current MVP auth story — see ADR).
 
 - **OTel Collector** — receives OTLP from services
 - **Jaeger** (or Grafana Tempo) — UI for traces, default port `16686`
-- App services can emit no-op / log-only until the collector is added; avoid
-  hard-failing requests if the exporter is down during Sessions 0–3
+- **Batched export** — app SDKs use `BatchSpanProcessor` + periodic metrics
+  export to the collector (Session 4). Prefer fail-open if the exporter is
+  down during Sessions 0–3; avoid hard-failing requests
+- App services can emit no-op / log-only until the collector is added
 
 ## Directory Structure
 
@@ -216,6 +218,8 @@ Each service:
 3. **Request Metrics** — Count, duration, and status code per endpoint
 4. **Distributed Tracing** — OpenTelemetry spans; W3C `traceparent` between
    services; export OTLP to the collector when present
+5. **Batched export (Session 4)** — `BatchSpanProcessor` / periodic metric
+   reader so telemetry is flushed in batches rather than per-span sync HTTP
 
 ## Docker Compose Services
 
