@@ -12,6 +12,8 @@ design decisions for the first working version.
 | [data-model.md](./data-model.md) | SQLModel entities (User, Post, Like, Follow), mention timeline semantics | ✅ Refined |
 | [api-routes.md](./api-routes.md) | REST endpoints across auth, users, posts, social, and analytics | ✅ Refined |
 | [architecture.md](./architecture.md) | Compose services, browser vs Docker URLs, CORS, OTel viewer, data flows | ✅ Refined |
+| [analytics-storage.md](./analytics-storage.md) | Analytics event storage — Supabase Postgres via psycopg3 | ✅ Approved |
+| [analytics-batch-events.md](./analytics-batch-events.md) | Batch ingest endpoint — `POST /analytics/events` for multi-event writes | ✅ Implemented |
 
 ## Design Principles
 

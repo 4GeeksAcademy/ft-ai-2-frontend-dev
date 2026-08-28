@@ -9,27 +9,38 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from typing import Annotated
 
-from fastapi import FastAPI, Query, Request, WebSocket, WebSocketDisconnect, status
+from fastapi import FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.cors import cors_origin_regex_from_env, cors_origins_from_env
+from app.database import check_connection, close_database, init_database
 from app.event_store import event_store
 from app.logging_config import configure_logging
 from app.metrics import MetricsTimer, metrics_response, record_request
-from app.schemas import EventCreateRequest, EventResponse, HealthResponse
+from app.schemas import (
+    EventBatchCreateRequest,
+    EventBatchResponse,
+    EventCreateRequest,
+    EventResponse,
+    HealthResponse,
+)
 from app.telemetry import get_tracer, instrument_fastapi, setup_telemetry, shutdown_telemetry
 from app.websocket import ws_manager
 
 configure_logging(os.getenv("LOG_LEVEL", "INFO"))
 logger = logging.getLogger("brevity-analytics")
 
+BATCH_MAX_SIZE = int(os.getenv("ANALYTICS_BATCH_MAX_SIZE", "100"))
+
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    init_database()
     if setup_telemetry("brevity-analytics"):
         instrument_fastapi(_app)
     yield
+    close_database()
     shutdown_telemetry()
 
 
@@ -97,11 +108,22 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
+    db_status = "ok"
+    events_stored: int | None = None
+    try:
+        check_connection()
+        events_stored = event_store.count()
+    except Exception:
+        logger.exception("database health check failed")
+        db_status = "error"
+
+    status = "ok" if db_status == "ok" else "degraded"
     return HealthResponse(
-        status="ok",
+        status=status,
         service="brevity-analytics",
         timestamp=datetime.now(timezone.utc).isoformat(),
-        events_stored=event_store.count(),
+        database=db_status,
+        events_stored=events_stored,
     )
 
 
@@ -154,6 +176,78 @@ async def create_event(request: Request, body: EventCreateRequest) -> EventRespo
                     body.event_type,
                 )
             return EventResponse(**event)
+    finally:
+        if token is not None:
+            try:
+                from opentelemetry import context as otel_context
+
+                otel_context.detach(token)
+            except Exception:
+                pass
+
+
+@app.post(
+    "/analytics/events",
+    response_model=EventBatchResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_events_batch(
+    request: Request,
+    body: EventBatchCreateRequest,
+) -> EventBatchResponse:
+    batch_size = len(body.events)
+    if batch_size > BATCH_MAX_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+            detail=f"Batch size {batch_size} exceeds maximum of {BATCH_MAX_SIZE}",
+        )
+
+    traceparent = request.headers.get("traceparent")
+    token = None
+    try:
+        from opentelemetry import context as otel_context
+        from opentelemetry.propagate import extract
+
+        carrier = {k.lower(): v for k, v in request.headers.items()}
+        token = otel_context.attach(extract(carrier))
+    except Exception:
+        token = None
+
+    try:
+        tracer = get_tracer("brevity-analytics")
+        with tracer.start_as_current_span("analytics.store_events_batch") as span:
+            span.set_attribute("analytics.batch_size", batch_size)
+            if traceparent:
+                span.set_attribute("messaging.traceparent", traceparent)
+            stored = event_store.insert_events_batch(
+                events=[
+                    {
+                        "event_type": event.event_type,
+                        "user_id": event.user_id,
+                        "metadata": event.metadata,
+                    }
+                    for event in body.events
+                ],
+            )
+            for event in stored:
+                await ws_manager.broadcast(event)
+            logger.info(
+                "event batch stored",
+                extra={
+                    "path": "/analytics/events",
+                    "method": "POST",
+                    "status_code": 201,
+                    "count": batch_size,
+                },
+            )
+            if traceparent:
+                logger.info(
+                    "received traceparent=%s for batch_size=%s",
+                    traceparent,
+                    batch_size,
+                )
+            responses = [EventResponse(**event) for event in stored]
+            return EventBatchResponse(events=responses, count=len(responses))
     finally:
         if token is not None:
             try:

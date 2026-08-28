@@ -126,3 +126,101 @@ def _post_event(
                 )
     except Exception:
         logger.warning("analytics emit failed", exc_info=True)
+
+
+def emit_events_batch(
+    *,
+    events: list[dict[str, Any]],
+    traceparent: str | None = None,
+    otel_context: Any = None,
+) -> None:
+    """Best-effort batch emit; never raise into the request path."""
+    if not events:
+        return
+
+    token = None
+    if otel_context is not None:
+        try:
+            from opentelemetry import context as otel_ctx_mod
+
+            token = otel_ctx_mod.attach(otel_context)
+        except Exception:
+            token = None
+
+    try:
+        headers: dict[str, str] = {"Content-Type": "application/json"}
+        batch_size = len(events)
+        timeout = min(10.0, 2.0 + 0.05 * batch_size)
+        try:
+            from opentelemetry import trace
+            from opentelemetry.propagate import inject
+
+            tracer = trace.get_tracer("brevity-api.analytics")
+            with tracer.start_as_current_span("analytics.emit_batch") as span:
+                span.set_attribute("analytics.batch_size", batch_size)
+                inject(headers)
+                outbound_tp = headers.get("traceparent") or continue_trace(traceparent)
+                headers["traceparent"] = outbound_tp
+                _post_events_batch(events, headers, outbound_tp, timeout, batch_size)
+        except Exception:
+            outbound_tp = continue_trace(traceparent)
+            headers["traceparent"] = outbound_tp
+            _post_events_batch(events, headers, outbound_tp, timeout, batch_size)
+    finally:
+        if token is not None:
+            try:
+                from opentelemetry import context as otel_ctx_mod
+
+                otel_ctx_mod.detach(token)
+            except Exception:
+                pass
+
+
+def _post_events_batch(
+    events: list[dict[str, Any]],
+    headers: dict[str, str],
+    outbound_tp: str,
+    timeout: float,
+    batch_size: int,
+) -> None:
+    payload = {
+        "events": [
+            {
+                "event_type": event["event_type"],
+                "user_id": event.get("user_id"),
+                "metadata": {
+                    **(event.get("metadata") or {}),
+                    "traceparent": outbound_tp,
+                },
+            }
+            for event in events
+        ],
+    }
+    try:
+        with httpx.Client(timeout=timeout) as client:
+            response = client.post(
+                f"{ANALYTICS_URL}/analytics/events",
+                json=payload,
+                headers=headers,
+            )
+            if response.status_code >= 400:
+                logger.warning(
+                    "analytics batch emit rejected",
+                    extra={
+                        "status_code": response.status_code,
+                        "path": "/analytics/events",
+                        "count": batch_size,
+                    },
+                )
+            else:
+                logger.info(
+                    "analytics batch emitted",
+                    extra={
+                        "path": "/analytics/events",
+                        "method": "POST",
+                        "status_code": response.status_code,
+                        "count": batch_size,
+                    },
+                )
+    except Exception:
+        logger.warning("analytics batch emit failed", exc_info=True)

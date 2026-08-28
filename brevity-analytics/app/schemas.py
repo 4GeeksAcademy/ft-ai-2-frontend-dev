@@ -31,8 +31,18 @@ class EventResponse(BaseModel):
     created_at: str
 
 
+class EventBatchCreateRequest(BaseModel):
+    events: list[EventCreateRequest] = Field(..., min_length=1)
+
+
+class EventBatchResponse(BaseModel):
+    events: list[EventResponse]
+    count: int
+
+
 class HealthResponse(BaseModel):
     status: str
     service: str
     timestamp: str
+    database: str | None = None
     events_stored: int | None = None

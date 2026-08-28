@@ -7,15 +7,12 @@ WORKDIR /app
 
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
-    PYTHONUNBUFFERED=1 \
-    ANALYTICS_DB_PATH=/app/data/events.json
+    PYTHONUNBUFFERED=1
 
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 
 COPY app ./app
-
-RUN mkdir -p /app/data
 
 EXPOSE 8001
 

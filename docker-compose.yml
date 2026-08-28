@@ -39,14 +39,12 @@ services:
       - "8001:8001"
     environment:
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:8000,http://localhost:8001,http://127.0.0.1:3000,http://127.0.0.1:8000,http://127.0.0.1:8001}
-      ANALYTICS_DB_PATH: /app/data/events.json
+      SUPABASE_DB_URL: ${SUPABASE_DB_URL}
       OTEL_SERVICE_NAME: brevity-analytics
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
       OTEL_BSP_SCHEDULE_DELAY: ${OTEL_BSP_SCHEDULE_DELAY:-1000}
       OTEL_BSP_MAX_EXPORT_BATCH_SIZE: ${OTEL_BSP_MAX_EXPORT_BATCH_SIZE:-64}
       OTEL_METRIC_EXPORT_INTERVAL: ${OTEL_METRIC_EXPORT_INTERVAL:-5000}
-    volumes:
-      - analytics-data:/app/data
     depends_on:
       - otel-collector
 
@@ -89,4 +87,3 @@ services:
 
 volumes:
   pgdata:
-  analytics-data:

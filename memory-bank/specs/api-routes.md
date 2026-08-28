@@ -163,6 +163,7 @@ Deduplicate if a post matches more than one rule (e.g. own mention post).
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | `POST` | `/analytics/event` | No | Record an analytics event |
+| `POST` | `/analytics/events` | No | Record multiple analytics events (batch) |
 | `GET` | `/analytics/events` | No | Query recent events (paginated) |
 | `WS` | `/analytics/ws` | No | WebSocket stream of live **analytics** events |
 
@@ -180,6 +181,34 @@ from WebSocket messages.
 }
 // → 201
 ```
+
+### POST /analytics/events (batch)
+
+```json
+{
+  "events": [
+    {
+      "event_type": "like_created",
+      "user_id": "uuid",
+      "metadata": { "post_id": "uuid" }
+    },
+    {
+      "event_type": "follow_created",
+      "user_id": "uuid",
+      "metadata": { "target_user_id": "uuid" }
+    }
+  ]
+}
+// → 201
+{
+  "events": [ /* EventResponse[] in request order */ ],
+  "count": 2
+}
+```
+
+- Atomic: the entire batch succeeds or fails (no partial writes).
+- Max batch size defaults to 100 (`ANALYTICS_BATCH_MAX_SIZE`); oversize batches
+  return `413`.
 
 ### Event Types
 
