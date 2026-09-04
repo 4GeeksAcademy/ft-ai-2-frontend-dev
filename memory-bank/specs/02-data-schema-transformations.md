@@ -41,7 +41,7 @@ This specification defines the schema of the raw `sales_data.csv`, the derived d
 ### Requirements
 
 - **REQ-001**: The raw CSV must be read with `encoding='latin-1'` (ISO-8859-1) to handle special characters.
-- **REQ-002**: `InvoiceDate` must be parsed from the format `DD/MM/YYYY HH:MM` into a datetime object.
+- **REQ-002**: `InvoiceDate` must be parsed from the format `MM/DD/YYYY HH:MM` into a datetime object.
 - **REQ-003**: `Quantity` and `UnitPrice` must be cast to numeric types. Non-numeric values must be logged and nullified.
 - **REQ-004**: Rows with `CustomerID` missing (blank/null) must be preserved but flagged with `customer_unknown = True`.
 - **REQ-005**: Rows with `Quantity <= 0` or `InvoiceNo` starting with 'C' must be classified as cancellations and excluded from positive sales aggregation.
@@ -71,7 +71,7 @@ This specification defines the schema of the raw `sales_data.csv`, the derived d
 | `StockCode` | `string` | No | 5-char alphanumeric product code | `85123A` |
 | `Description` | `string` | Yes | Product description | `WHITE HANGING HEART T-LIGHT HOLDER` |
 | `Quantity` | `integer` | No | Quantity sold (positive) or returned (negative) | `6`, `-2` |
-| `InvoiceDate` | `string` | No | Date/time of transaction `DD/MM/YYYY HH:MM` | `12/1/2010 8:26` |
+| `InvoiceDate` | `string` | No | Date/time of transaction `MM/DD/YYYY HH:MM` | `12/1/2010 8:26` |
 | `UnitPrice` | `float` | No | Price per unit in GBP (£) | `2.55` |
 | `CustomerID` | `string` | Yes | 5-digit customer identifier | `17850` |
 | `Country` | `string` | No | Customer's country (38 distinct values) | `United Kingdom` |
