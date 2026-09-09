@@ -1,0 +1,102 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #0f172a;
+  color: #e2e8f0;
+  line-height: 1.5;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+}
+
+.app {
+  width: min(90vw, 640px);
+  padding: 2rem 0;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  color: #94a3b8;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: #1e293b;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.card p {
+  color: #94a3b8;
+  margin-bottom: 1rem;
+}
+
+button {
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.6rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  background: #3b82f6;
+  color: #fff;
+  transition: background 0.15s;
+}
+
+button:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.output {
+  margin-top: 1rem;
+}
+
+.task-id {
+  font-size: 0.8rem;
+  color: #64748b;
+  word-break: break-all;
+  margin-bottom: 0.5rem;
+}
+
+.pending {
+  color: #facc15;
+}
+
+.result pre {
+  background: #0f172a;
+  border-radius: 0.4rem;
+  padding: 0.75rem;
+  margin-top: 0.4rem;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  color: #a5f3fc;
+}
+
+.error {
+  color: #f87171;
+}
