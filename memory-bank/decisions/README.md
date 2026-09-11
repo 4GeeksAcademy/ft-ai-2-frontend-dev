@@ -6,3 +6,4 @@ This directory contains the ADRs for this project.  ADRs are in separate files, 
 
 | File | Reason |
 |------|--------|
+|[01-use-cloudflare-r2-for-asset-storage.md](./01-use-cloudflare-r2-for-asset-storage.md)|Chose Cloudflare R2 for durable, S3-compatible product asset storage|

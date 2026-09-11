@@ -32,6 +32,13 @@ This is a demo to show the complete structure that we've been building for our a
 - Python 3.12+
 - Celery 5.5+ using Redis 8+ as a message broker and result store
 
+### Product Asset Storage
+
+- Cloudflare R2 for durable storage of product images and videos
+- Backend and task workers access R2 through its S3-compatible API; database records store asset metadata and object keys, not the asset binaries
+- Uploads use short-lived presigned URLs; public delivery uses a Cloudflare custom domain when assets are intended to be customer-facing
+- The R2 environment configuration supplies the account ID, bucket name, endpoint, access key ID, secret access key, and public asset base URL through environment-specific `.env` files
+
 ### Observability
 
 - Python 3.12+

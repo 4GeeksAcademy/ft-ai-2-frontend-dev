@@ -25,6 +25,7 @@ project-root/
 │   │   │   ├── base.py               # SQLAlchemy Base
 │   │   │   ├── models/
 │   │   │   │   ├── __init__.py
+│   │   │   │   ├── batch.py           # BatchJob & AgentSuggestion
 │   │   │   │   ├── user.py
 │   │   │   │   └── item.py
 │   │   │   └── session.py            # engine & session factory
@@ -39,11 +40,22 @@ project-root/
 │   │   │   └── item.py
 │   │   ├── services/
 │   │   │   ├── __init__.py
-│   │   │   ├── auth_service.py       # jose + libpass JWT logic
+│   │   │   ├── agent_service.py       # Agent batch orchestration
+│   │   │   ├── auth_service.py        # jose + libpass JWT logic
+│   │   │   ├── channel_plugin.py      # Abstract plugin interface
+│   │   │   ├── inventory_sync.py      # Sale webhook & cross-channel sync
+│   │   │   ├── listing_service.py     # Listing CRUD across channels
+│   │   │   ├── storage_service.py     # S3-compatible R2 asset storage
 │   │   │   └── user_service.py
 │   │   ├── health.py                 # /health/ready, /health/live, /health/startup
 │   │   ├── lifespan.py               # startup/shutdown hooks (graceful shutdown)
 │   │   └── main.py                   # FastAPI app factory
+│   ├── plugins/                       # Sales channel adapters
+│   │   ├── __init__.py
+│   │   └── shopify/
+│   │       ├── __init__.py
+│   │       ├── client.py              # Shopify API client
+│   │       └── plugin.py              # Shopify channel plugin impl
 │   ├── alembic/
 │   │   ├── versions/
 │   │   ├── env.py
@@ -91,6 +103,7 @@ project-root/
 │   │   ├── config.py                 # Redis broker & result backend
 │   │   └── tasks/
 │   │       ├── __init__.py
+│   │       ├── agent_tasks.py         # LLM description & pricing tasks
 │   │       ├── email_tasks.py
 │   │       └── report_tasks.py
 │   ├── tests/
@@ -148,8 +161,10 @@ project-root/
 | Directory | Architecture Component | Key Purpose |
 |-----------|----------------------|-------------|
 | `backend/` | Backend | FastAPI app, Postgres models, Alembic migrations, JWT auth |
+| `backend/plugins/` | Backend | Sales channel plugin adapters (Shopify, etc.) |
+| `backend/app/services/` | Backend | Business logic — auth, listings, inventory sync, R2 storage, agent orchestration |
 | `frontend/` | Frontend | NextJS 16+ App Router, TailwindCSS 4+, typed API client |
-| `task-worker/` | Task Offloading | Celery 5.5+ with Redis broker, background task definitions |
+| `task-worker/` | Task Offloading | Celery 5.5+ with Redis broker, LLM agent tasks, background job definitions |
 | `analytics/` | Observability | Separate FastAPI service, MongoDB ingestion, OTel export |
 | `infra/` | Infrastructure | Docker Compose, OTel/Jaeger config, env files |
 | `infra/docker/` | All | Local dev, production, and observability Compose files |
