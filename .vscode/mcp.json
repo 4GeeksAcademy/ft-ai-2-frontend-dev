@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "dotlag-books": {
+      "type": "http",
+      "url": "https://bookish-space-telegram-g446rrwpgqpf9gj4-8000.app.github.dev/mcp"
+    }
+  }
+}
