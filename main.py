@@ -1,163 +1,162 @@
-import json
+from pprint import pprint
 
-from fastmcp import FastMCP
-import requests
-from pydantic import BaseModel, Field, computed_field
+from langgraph.graph import StateGraph, MessagesState, START, END
+from langchain_core.messages import HumanMessage
 
-mcp = FastMCP(
-    "Book Data MCP",
-    instructions="Provides book data from the dotlag book database."
+
+def classifier(state: MessagesState):
+    # pprint(state)
+    most_recent: HumanMessage = next(filter(
+        lambda x: type(x) is HumanMessage,
+        state['messages'][::-1],
+    ))
+
+    if "cs" in most_recent.text.lower():
+        return "cs_bot"
+    elif "product" in most_recent.text.lower():
+        return "prod_bot"
+    elif "strategy" in most_recent.text.lower():
+        return "strat_bot"
+    else:
+        return None
+
+
+def class_bot(state: MessagesState):
+    # pprint(state)
+    return {
+        "messages": [
+            *state["messages"],
+            {
+                "role": "ai",
+                "content": "How can I help you?"
+            },
+        ]
+    }
+
+
+def cs_bot(state: MessagesState):
+    # pprint(state)
+    return {
+        "messages": [
+            *state["messages"],
+            {
+                "role": "ai",
+                "content": "I am here to help."
+            },
+        ]
+    }
+
+
+def prod_bot(state: MessagesState):
+    # pprint(state)
+    return {
+        "messages": [
+            *state["messages"],
+            {
+                "role": "ai",
+                "content": "prodbot says this item is high quality wares that are not stolen why would you ask."
+            },
+        ]
+    }
+
+
+def strat_bot(state: MessagesState):
+    # pprint(state)
+    return {
+        "messages": [
+            *state["messages"],
+            {
+                "role": "ai",
+                "content": "stratbot says stock this stuff."
+            },
+        ]
+    }
+
+
+def synthesis(state: MessagesState):
+    # pprint(state)
+    # Find the most recent AI message from a specialist bot
+    ai_messages = [
+        m for m in state["messages"]
+        if isinstance(m, dict) and m.get("role") == "ai"
+        or hasattr(m, "type") and m.type == "ai"
+    ]
+    last_ai = ai_messages[-1] if ai_messages else None
+
+    # Determine which bot handled it, for a nice fake summary
+    content = ""
+    if last_ai:
+        content = last_ai.get("content", "") if isinstance(last_ai, dict) else last_ai.content
+
+    return {
+        "messages": [
+            *state["messages"],
+            {
+                "role": "ai",
+                "content": f"🤖 Synthesis: All handled! Want help with anything else? (type 'done' to exit)"
+            },
+        ]
+    }
+
+
+router_graph = StateGraph(MessagesState)
+
+router_graph.add_node(class_bot)
+router_graph.add_node(cs_bot)
+router_graph.add_node(strat_bot)
+router_graph.add_node(prod_bot)
+router_graph.add_node(synthesis)
+
+router_graph.add_edge(START, "class_bot")
+
+router_graph.add_conditional_edges(
+    "class_bot",
+    classifier,
+    {
+        "cs_bot": "cs_bot",
+        "strat_bot": "strat_bot",
+        "prod_bot": "prod_bot",
+        None: END,
+    }
 )
 
+router_graph.add_edge("cs_bot", "synthesis")
+router_graph.add_edge("strat_bot", "synthesis")
+router_graph.add_edge("prod_bot", "synthesis")
+router_graph.add_edge("synthesis", END)
 
-class Book(BaseModel):
-    """A book in the dotlag library, as served by https://library.dotlag.space."""
+graph = router_graph.compile()
 
-    title: str
-    author: str | None = None
-    cover: str | None = None
-    num_pages: int | None = None
-    year_published: int | None = None
-    isbn13: str | None = None
-    isbn10: str | None = None
-    is_awesome: bool = True
-    have_read: bool = False
-    id: int | None = None
+# --- Demo Chat Loop ---
 
+def run_demo():
+    print("🤖 Welcome to the Router Bot Demo!")
+    print("Type your message below. Try mentioning 'cs', 'product', or 'strategy'.")
+    print("Type 'quit', 'exit', 'q', or 'done' to stop.\n")
 
-class BookCreate(BaseModel):
-    """Payload for POST /library/add — same as Book but without the server-assigned id."""
+    config = {"configurable": {"thread_id": "demo-1"}}
 
-    title: str
-    author: str | None = None
-    cover: str | None = None
-    num_pages: int | None = None
-    year_published: int | None = None
-    isbn13: str | None = None
-    isbn10: str | None = None
-    is_awesome: bool = True
-    have_read: bool = False
+    while True:
+        user_input = input("👤 You: ").strip()
+        if user_input.lower() in ("quit", "exit", "q", "done"):
+            print("👋 Goodbye!")
+            break
 
-
-class BookUpdate(BaseModel):
-    """Payload for PATCH/PUT /library/{id} — every field optional for partial updates."""
-
-    title: str | None = None
-    author: str | None = None
-    cover: str | None = None
-    num_pages: int | None = None
-    year_published: int | None = None
-    isbn13: str | None = None
-    isbn10: str | None = None
-    is_awesome: bool | None = None
-    have_read: bool = False
-
-
-class Books(BaseModel):
-    """Response shape of GET /library."""
-
-    books: list[Book]
-    count: int
-
-
-@mcp.tool(
-    tags={"public", "utility"},
-    name="get_dotlag_book_data",
-    description="Retrieves book data from the dotlag library API."
-)
-def get_books() -> Books:
-    resp = requests.get("https://library.dotlag.space/library")
-    return resp.json()
-
-
-@mcp.tool(
-    tags={"public", "utility"},
-    name="add_dotlag_book_data",
-    description="Adds a book to the dotlag library API"
-)
-def add_book(book: BookCreate) -> Book:
-    resp = requests.post(
-        "https://library.dotlag.space/library/add",
-        headers={
-            "Content-Type": "application/json",
-        },
-        json=book.model_dump(),
-    )
-    return resp.json()
-
-
-# ---------------------------------------------------------------------------
-# OpenLibrary (https://openlibrary.org/developers/api)
-# ---------------------------------------------------------------------------
-
-
-class OpenLibraryDoc(BaseModel):
-    """A single search result document from the OpenLibrary search API."""
-
-    key: str
-    title: str
-    author_name: list[str] | None = None
-    first_publish_year: int | None = None
-    number_of_pages_median: int | None = None
-    cover_i: int | None = None
-    isbn: list[str] | None = None
-    first_sentence: list[str] | None = None
-    subject: list[str] | None = None
-
-    @computed_field
-    @property
-    def cover_url(self) -> str | None:
-        """Build a cover image URL from the cover_i identifier, if present."""
-        if self.cover_i is None:
-            return None
-        return f"https://covers.openlibrary.org/b/id/{self.cover_i}-L.jpg"
-
-    @computed_field
-    @property
-    def openlibrary_url(self) -> str | None:
-        """Build the OpenLibrary page URL for this work, if present."""
-        if not self.key:
-            return None
-        return f"https://openlibrary.org{self.key}"
-
-
-class OpenLibrarySearchResponse(BaseModel):
-    """Response shape of GET https://openlibrary.org/search.json."""
-
-    numFound: int
-    start: int
-    numFoundExact: bool
-    docs: list[OpenLibraryDoc]
-
-
-@mcp.tool(
-    tags={"public", "utility"},
-    name="get_book_data_by_title",
-    description=(
-        "Retrieves book data from the OpenLibrary API by title. Returns matching "
-        "books with author(s), first publish year, page count, ISBNs, subjects, "
-        "cover image URL, and OpenLibrary page URL."
-    ),
-)
-def get_book_data_by_title(
-    title: str = Field(description="Title of the book to search for"),
-    limit: int = Field(
-        default=5,
-        ge=1,
-        le=100,
-        description="Maximum number of results to return (1-100)",
-    ),
-) -> list[OpenLibraryDoc]:
-    """Search OpenLibrary for books matching a title."""
-    resp = requests.get(
-        "https://openlibrary.org/search.json",
-        params={"q": title, "limit": limit},
-        timeout=10,
-    )
-    resp.raise_for_status()
-    data = OpenLibrarySearchResponse.model_validate(resp.json())
-    return data.docs
+        print()
+        for event in graph.stream(
+            {"messages": [HumanMessage(content=user_input)]},
+            config,
+        ):
+            # Each event is a dict keyed by node name, e.g. {"class_bot": {...}}
+            for node_name, output in event.items():
+                if "messages" in output and output["messages"]:
+                    last_msg = output["messages"][-1]
+                    if isinstance(last_msg, dict) and last_msg.get("role") == "ai":
+                        print(f"  🤖 {node_name}: {last_msg['content']}")
+                    elif hasattr(last_msg, "type") and last_msg.type == "ai":
+                        print(f"  🤖 {node_name}: {last_msg.content}")
+        print()
 
 
 if __name__ == "__main__":
-    mcp.run(transport="http")
+    run_demo()

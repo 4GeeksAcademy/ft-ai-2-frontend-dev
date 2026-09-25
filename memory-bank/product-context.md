@@ -1,6 +1,6 @@
-# Book Data MCP
+# Multi-Agent System Demo
 
-Book Data MCP is meant to provide an interface for agents to retrieve data about specific books from the dotlag Library API and the OpenLibrary API to allow agents detailed data about specific books for a support agent for an online bookstore.
+This is a generic demo for multi-agent systems.  The example will be an agent meant to help find and research products for an ecommerce company.
 
 ## Related Docs
 
