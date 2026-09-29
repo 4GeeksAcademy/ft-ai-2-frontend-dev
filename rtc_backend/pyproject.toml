@@ -1,0 +1,10 @@
+[project]
+name = "ft-ai-2-frontend-dev"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.141.1",
+    "websockets>=17.1",
+]
